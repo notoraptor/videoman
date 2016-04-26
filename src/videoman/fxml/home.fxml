@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<GridPane hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="videoman.control.HomeController">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    </rowConstraints>
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+    <Label maxWidth="1.7976931348623157E308" text="1) Ouvrir ou sauvegarder une liste de dossiers" wrapText="true" GridPane.columnSpan="2" />
+    <TextField fx:id="listPath" GridPane.rowIndex="1" />
+    <VBox alignment="CENTER" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+        <Button fx:id="listChooser" alignment="CENTER" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#chooseList" text="Ouvrir une liste ..." />
+        <Button fx:id="listCreator" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#createList" text="Créer une liste ..." />
+    </VBox>
+    <Label text="2) Valider ou éditer la liste des dossiers (un chemin complet de dossier par ligne)" wrapText="true" GridPane.rowIndex="2" />
+    <TextArea fx:id="list" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+    <Button fx:id="databaseMaker" mnemonicParsing="false" onAction="#makeDatabase" text="Créer ou mettre à jour la base de données" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+    <ProgressBar fx:id="progress" maxWidth="1.7976931348623157E308" progress="0.0" GridPane.columnSpan="2" GridPane.rowIndex="6" />
+    <Button fx:id="next" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#showDatabase" text="Suivant" textAlignment="CENTER" textFill="#058d0a" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="7">
+      <font>
+         <Font name="System Bold" size="12.0" />
+      </font></Button>
+    <Label fx:id="message" alignment="CENTER" maxWidth="1.7976931348623157E308" textAlignment="CENTER" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="5">
+        <font>
+            <Font name="System Italic" size="12.0" />
+        </font>
+    </Label>
+   <Button fx:id="folderChooser" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#addFolder" text="Ajouter un dossier ..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
+</GridPane>

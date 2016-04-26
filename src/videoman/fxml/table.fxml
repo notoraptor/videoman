@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+
+<TableView fx:id="tableVideos" editable="true" tableMenuButtonVisible="true" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="videoman.control.TableController">
+  <columns>
+    <TableColumn fx:id="colEmpty" maxWidth="20.0" minWidth="20.0" prefWidth="20.0" />
+    <TableColumn fx:id="colName" minWidth="50.0" prefWidth="100.0" text="Nom du fichier" />
+      <TableColumn fx:id="colVideoDateModified" minWidth="50.0" prefWidth="100.0" text="Modifiée le" />
+      <TableColumn fx:id="colExtension" minWidth="50.0" prefWidth="50.0" text="Ext." />
+      <TableColumn fx:id="colFormat" minWidth="50.0" prefWidth="100.0" text="Format" />
+      <TableColumn fx:id="colSize" minWidth="50.0" prefWidth="70.0" text="Taille" />
+      <TableColumn fx:id="colDuration" minWidth="50.0" prefWidth="100.0" text="Durée" />
+      <TableColumn fx:id="colAudioCodec" minWidth="50.0" prefWidth="70.0" text="audio" />
+      <TableColumn fx:id="colVideoCodec" minWidth="50.0" prefWidth="70.0" text="vidéo" />
+      <TableColumn fx:id="colWidth" minWidth="50.0" prefWidth="70.0" text="Largeur" />
+      <TableColumn fx:id="colHeight" minWidth="50.0" prefWidth="70.0" text="Hauteur" />
+      <TableColumn fx:id="colQuality" minWidth="50.0" prefWidth="70.0" text="Qualité" />
+      <TableColumn fx:id="colNotation" minWidth="50.0" prefWidth="100.0" text="Notation" />
+      <TableColumn fx:id="colPersons" minWidth="50.0" prefWidth="100.0" text="Personnes" />
+      <TableColumn fx:id="colCategories" minWidth="50.0" prefWidth="100.0" text="Catégories" />
+      <TableColumn fx:id="colCountries" minWidth="50.0" prefWidth="100.0" text="Lieux" />
+      <TableColumn fx:id="colPath" minWidth="50.0" prefWidth="100.0" text="Chemin" />
+  </columns>
+</TableView>
