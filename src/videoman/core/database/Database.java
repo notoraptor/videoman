@@ -2,7 +2,6 @@ package videoman.core.database;
 
 import videoman.Utils;
 import videoman.core.*;
-import videoman.gui.Question;
 import videoman.notification.Notification;
 import videoman.notification.info.MessageInfo;
 import videoman.notification.info.ProgressInfo;
@@ -63,6 +62,21 @@ public class Database {
 	}
 	public FileDesc getDirectory() {
 		return directory;
+	}
+	public Property create(String name, Type type) {
+		switch (type) {
+			case FOLDER:
+				break;
+			case PERSON:
+				return createPerson(name);
+			case CATEGORY:
+				return createCategory(name);
+			case COUNTRY:
+				return createCountry(name);
+			case QUERY:
+				break;
+		}
+		return null;
 	}
 	public Person createPerson(String name) {
 		name = name.trim().toLowerCase();
@@ -298,6 +312,21 @@ public class Database {
 		for(Video video: toDelete) {
 			video.deletePermanently();
 		}
+	}
+	public void update(List<Video> videos, Set<Property> toRemove, Set<Property> toAdd) {
+		HashSet<Property> propertiesToAdd = new HashSet<>();
+		for (Property propertyToAdd: toAdd) {
+			Property p = properties.find(propertyToAdd.type(), propertyToAdd.getValue());
+			if (p == null) {
+				p = propertyToAdd;
+				properties.add(p);
+			}
+			propertiesToAdd.add(p);
+		}
+		for(Video video: videos)
+			video.update(toRemove, propertiesToAdd);
+		refreshProperties();
+		updateView();
 	}
 	public void updateCategories(List<Video> videos, Set<Category> toRemove, Set<Category> toAdd) {
 		HashSet<Category> propertiesToAdd = new HashSet<>();

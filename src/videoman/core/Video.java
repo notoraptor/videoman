@@ -177,6 +177,26 @@ abstract public class Video {
 	public String concatenateFormat() {
 		return filename.getExtension() + " / " + format + " / " + videoCodec + " / " + audioCodec;
 	}
+	public boolean hasProperty(Property property) {
+		return videoPropertySet.contains(property);
+	}
+	public void addPropertiesTo(Collection<Property> collection, Type type) {
+		switch (type) {
+			case FOLDER:
+				break;
+			case PERSON:
+				addPersonsTo(collection);
+				break;
+			case CATEGORY:
+				addCategoriesTo(collection);
+				break;
+			case COUNTRY:
+				addCountriesTo(collection);
+				break;
+			case QUERY:
+				break;
+		}
+	}
 	public void addPersonsTo(Collection<Property> collection) {
 		videoPropertySet.addPersonsTo(collection);
 	}

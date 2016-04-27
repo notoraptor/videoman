@@ -7,38 +7,45 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.TextAlignment;
 
 abstract public class BasicLabel<E> {
-	static private final String[] colors = new String[] {
-			"white", "rgb(245,245,248)"
-	};
+	private EditableList<E> parent;
 	private E element;
 	private Label label;
 	private Button button;
 	private BorderPane node;
+	private boolean centerSet;
 	public BasicLabel(EditableList<E> parent, E object, String actionName) {
+		this.parent = parent;
 		element = object;
 		label = new Label(element.toString());
 		button = new Button(actionName);
 		node = new BorderPane();
-		String color = colors[parent.getSize() % colors.length];
+		label.setMaxWidth(Double.MAX_VALUE);
+		label.setTextAlignment(TextAlignment.LEFT);
+		//label.setWrapText(true);
 		node.setPadding(new Insets(2, 5, 2, 5));
-		node.setStyle("-fx-background-color:" + color + ";");
-		node.setOnMouseEntered(event -> node.setStyle("-fx-background-color:rgb(220,220,235);"));
-		node.setOnMouseExited (event -> node.setStyle("-fx-background-color:" + color + ";"));
-		node.setCenter(buildContent(label));
+
 		node.setRight(button);
 	}
 	public void setAction(EventHandler<ActionEvent> eventHandler) {
 		button.setOnAction(eventHandler);
 	}
+	public EditableList<E> getParent() {
+		return parent;
+	}
 	public E getElement() {
 		return element;
 	}
 	public Node getNode() {
+		if (!centerSet) {
+			node.setCenter(buildContent(label));
+			centerSet = true;
+		}
 		return node;
 	}
 	public Node buildContent(Label label) {
 		return label;
-	};
+	}
 }

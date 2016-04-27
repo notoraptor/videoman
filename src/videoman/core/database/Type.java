@@ -1,6 +1,20 @@
 package videoman.core.database;
 
-enum Type {
+public enum Type {
 	FOLDER, PERSON, CATEGORY, COUNTRY,
-	QUERY
+	QUERY;
+	static public String getPropertyName(Type type) {
+		switch (type) {
+			case PERSON:
+				return "personnes";
+			case CATEGORY:
+				return "catégories";
+			case COUNTRY:
+				return "lieux";
+			case FOLDER:
+			case QUERY:
+				break;
+		}
+		return null;
+	}
 }

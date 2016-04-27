@@ -17,11 +17,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import videoman.core.*;
 import videoman.core.database.*;
 import videoman.form.*;
 import videoman.gui.Alert;
+import videoman.gui.FormDialog;
 import videoman.gui.Question;
 import videoman.notification.Info;
 import videoman.notification.Informer;
@@ -71,17 +71,38 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	@FXML private ImageView imageView;
 	@FXML void editCategories(ActionEvent event) throws Exception {
 		synchronized (selected) {
-			if(!selected.isEmpty()) form.gui().load(new CategoryEditionForm(form.gui(), selected));
+			if(!selected.isEmpty()) {
+				//form.gui().load(new CategoryEditionForm(form.gui(), selected));
+				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.CATEGORY));
+				categories.clear();
+				categories.addAll(view.categories());
+				tableVideos.refresh();
+				setLabelsFrom(selected);
+			}
 		}
 	}
 	@FXML void editCountries(ActionEvent event) throws Exception {
 		synchronized (selected) {
-			if(!selected.isEmpty()) form.gui().load(new CountryEditionForm(form.gui(), selected));
+			if(!selected.isEmpty()) {
+				//form.gui().load(new CountryEditionForm(form.gui(), selected));
+				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.COUNTRY));
+				countries.clear();
+				countries.addAll(view.countries());
+				tableVideos.refresh();
+				setLabelsFrom(selected);
+			}
 		}
 	}
 	@FXML void editPersons(ActionEvent event) throws Exception {
 		synchronized (selected) {
-			if(!selected.isEmpty()) form.gui().load(new PersonEditionForm(form.gui(), selected));
+			if(!selected.isEmpty()) {
+				//form.gui().load(new PersonEditionForm(form.gui(), selected));
+				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.PERSON));
+				persons.clear();
+				persons.addAll(view.persons());
+				tableVideos.refresh();
+				setLabelsFrom(selected);
+			}
 		}
 	}
 	@FXML void editNotation(ActionEvent event) throws Exception {
@@ -240,6 +261,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		statusInfo.setText(database.size() + " vidéos.");
 	}
 	private void setDefaultLabels() {
+		setEditor(false);
 		labelName.setText(Const.defaultName);
 		labelName.setUserData(null);
 		labelOpenFolder.setText(Const.defaultOpenFolder);
@@ -260,6 +282,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		setDefaultStatus();
 	}
 	private void setLabels(Video video) {
+		setEditor(true);
 		labelName.setText(video.getName());
 		labelName.setUserData(video.getVideoPath());
 		labelOpenFolder.setText("(ouvrir le dossier parent)");
@@ -295,7 +318,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		} catch (IOException ignored) {}
 		statusInfo.setText("1 vidéo sélectionnée sur " + database.size() + " vidéos.");
 	}
-	private void setLabelsFromSelected() {
+	private void setLabelsFrom(Collection<Video> selected) {
+		setEditor(!selected.isEmpty());
 		TreeSet<String> listNames = new TreeSet<>();
 		TreeSet<VideoDuration> listDurations = new TreeSet<>();
 		TreeSet<String> listFormats = new TreeSet<>();
@@ -350,6 +374,14 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		//
 		setThumbnail(null);
 		statusInfo.setText(selected.size() + " vidéos sélectionnées sur " + database.size() + " vidéos..");
+	}
+	private void setEditor(boolean editable) {
+		boolean disabled = !editable;
+		editionDeletion.setDisable(disabled);
+		editionNotation.setDisable(disabled);
+		editionPersons.setDisable(disabled);
+		editionCategories.setDisable(disabled);
+		editionCountries.setDisable(disabled);
 	}
 	public Image getImage(String path) throws IOException {
 		if (path == null)
@@ -435,7 +467,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 				} else if (selectedSize == 1) {
 					setLabels(selected.iterator().next());
 				} else {
-					setLabelsFromSelected();
+					setLabelsFrom(selected);
 				}
 			}
 		});
@@ -493,6 +525,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		categories = FXCollections.observableArrayList(view.categories());
 		countries = FXCollections.observableArrayList(view.countries());
 		form.gui().setInformer(new DatabaseInformer());
+		//
+		queryButton.setText(Const.magnifierSymbol);
 		//
 		if(Desktop.isDesktopSupported()) {
 			labelName.setOnAction(event -> {

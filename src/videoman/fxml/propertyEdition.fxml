@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<GridPane hgap="5.0" vgap="5.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="videoman.control.PropertyEditionController">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
+        <ColumnConstraints hgrow="SOMETIMES" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+        <RowConstraints vgrow="SOMETIMES" />
+    </rowConstraints>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+    </padding>
+    <Label fx:id="title" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Modifier les propriétés de {n} vidéos" textAlignment="CENTER" wrapText="true" GridPane.columnSpan="2">
+        <font>
+          <Font name="System Bold" size="20.0" />
+        </font>
+    </Label>
+    <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Vidéos à modifier" textAlignment="CENTER" underline="true" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+    <ListView fx:id="videoList" minHeight="100.0" prefHeight="100.0" GridPane.columnSpan="2" GridPane.rowIndex="2" />
+    <Label fx:id="freePropertiesLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Propriétés non attribuées" textAlignment="CENTER" underline="true" wrapText="true" GridPane.rowIndex="3" />
+    <Label fx:id="takenPropertiessLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Propriétés attribuées aux vidéos" textAlignment="CENTER" underline="true" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    <ScrollPane fitToWidth="true" minHeight="100.0" prefHeight="100.0" GridPane.rowIndex="4">
+        <VBox fx:id="freePropertiesContainer" />
+    </ScrollPane>
+    <ScrollPane fitToWidth="true" minHeight="100.0" prefHeight="100.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+        <VBox fx:id="takenPropertiesContainer" />
+    </ScrollPane>
+    <BorderPane GridPane.columnIndex="1" GridPane.rowIndex="5">
+        <center>
+          <TextField fx:id="input" />
+        </center>
+        <right>
+          <Button fx:id="addButton" mnemonicParsing="false" onAction="#add" text="ajouter une propriété {up}" BorderPane.alignment="CENTER">
+              <BorderPane.margin>
+                  <Insets left="5.0" />
+              </BorderPane.margin>
+          </Button>
+        </right>
+    </BorderPane>
+    <Button fx:id="cancelButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#cancel" text="{left} annuler" GridPane.rowIndex="6">
+        <GridPane.margin>
+          <Insets top="20.0" />
+        </GridPane.margin>
+    </Button>
+    <Button fx:id="saveButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#save" text="enregistrer {save}" GridPane.columnIndex="1" GridPane.rowIndex="6">
+        <GridPane.margin>
+          <Insets top="20.0" />
+        </GridPane.margin>
+    </Button>
+</GridPane>

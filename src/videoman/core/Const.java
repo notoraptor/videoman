@@ -15,7 +15,9 @@ public class Const {
 	static private final String stringSortSize = "Trier par taille ";
 	static private final String ascendingSymbol = "\u25b2";
 	static private final String descendingSymbol = "\u25bc";
-	static private final String raw = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum";
+	static public final String magnifierSymbol = "\ud83d\udd0d";
+	//static private final String raw = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum";
+	static private final String raw = null;
 	public static final String defaultName = raw;
 	public static final String defaultOpenFolder = raw;
 	public static final String defaultDuration = raw;

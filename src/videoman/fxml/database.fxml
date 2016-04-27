@@ -33,38 +33,39 @@
          <rowConstraints>
             <RowConstraints vgrow="SOMETIMES" />
          </rowConstraints>
-         <children>
-            <MenuBar>
-               <!--suppress JavaFxDefaultTag -->
-               <Menu mnemonicParsing="false" text="File">
-                  <!--suppress JavaFxDefaultTag -->
-                  <MenuItem mnemonicParsing="false" text="Close" />
-               </Menu>
-               <Menu mnemonicParsing="false" text="Edit">
-                  <!--suppress JavaFxDefaultTag -->
-                  <MenuItem mnemonicParsing="false" text="Delete" />
-               </Menu>
-               <Menu mnemonicParsing="false" text="Help">
-                  <!--suppress JavaFxDefaultTag -->
-                  <MenuItem mnemonicParsing="false" text="About" />
-               </Menu>
-            </MenuBar>
-            <BorderPane GridPane.columnIndex="1">
-               <center>
-                  <TextField fx:id="queryField" onKeyReleased="#searchDirect" BorderPane.alignment="CENTER">
-                     <BorderPane.margin>
-                        <Insets />
-                     </BorderPane.margin>
-                  </TextField>
-               </center>
-               <right>
-                  <Button fx:id="queryButton" mnemonicParsing="false" onAction="#search" text="🔍" BorderPane.alignment="CENTER" />
-               </right>
-            </BorderPane>
-         </children>
          <BorderPane.margin>
             <Insets bottom="5.0" />
          </BorderPane.margin>
+         <MenuBar>
+            <!--suppress JavaFxDefaultTag -->
+            <Menu mnemonicParsing="false" text="File">
+               <!--suppress JavaFxDefaultTag -->
+               <MenuItem mnemonicParsing="false" text="Close" />
+            </Menu>
+            <Menu mnemonicParsing="false" text="Edit">
+               <!--suppress JavaFxDefaultTag -->
+               <MenuItem mnemonicParsing="false" text="Delete" />
+            </Menu>
+            <Menu mnemonicParsing="false" text="Help">
+               <!--suppress JavaFxDefaultTag -->
+               <MenuItem mnemonicParsing="false" text="About" />
+            </Menu>
+         </MenuBar>
+         <BorderPane GridPane.columnIndex="1">
+            <center>
+               <TextField fx:id="queryField" onKeyReleased="#searchDirect" BorderPane.alignment="CENTER">
+                  <BorderPane.margin>
+                     <Insets />
+                  </BorderPane.margin>
+               </TextField>
+            </center>
+            <right>
+               <Button fx:id="queryButton" mnemonicParsing="false" onAction="#search" text="Q" BorderPane.alignment="CENTER">
+                  <font>
+                     <Font name="System Bold" size="12.0" />
+                  </font></Button>
+            </right>
+         </BorderPane>
       </GridPane>
    </top>
    <bottom>

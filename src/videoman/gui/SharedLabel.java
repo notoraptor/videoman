@@ -8,15 +8,14 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-public class SharedPropertyLabel<E> extends BasicLabel<E> {
+public class SharedLabel<E> extends BasicLabel<E> {
 	private int sharedSize;
 	private int totalSize;
 	private boolean forAll;
-	public SharedPropertyLabel(EditableList<E> parent, E element, int sharedCount, int totalCount) {
+	public SharedLabel(EditableList<E> parent, E element, int sharedCount, int totalCount) {
 		super(parent, element, "supprimer");
 		sharedSize = sharedCount;
 		totalSize = totalCount;
