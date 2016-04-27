@@ -4,9 +4,12 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import videoman.core.Notation;
 import videoman.gui.EditableList;
+import videoman.gui.NotationChooser;
 import videoman.gui.RemovableLabel;
 import videoman.gui.SharedLabel;
+import videoman.notification.Notification;
 
 public class Test extends Application {
 
@@ -16,13 +19,8 @@ public class Test extends Application {
 
 	@Override
 	public void start(Stage stage) {
-		VBox vBox = new VBox();
-		EditableList<String> list = new EditableList<>(vBox);
-		SharedLabel<String> element1 = new SharedLabel<>(list, "element 1 lorem ipsum", 1, 2);
-		RemovableLabel<String> element2 = new RemovableLabel<>(list, "element 2 lorem ipsum");
-		list.add(element1);
-		list.add(element2);
-		Scene scene = new Scene(vBox);
+		NotationChooser notationChooser = new NotationChooser(Notation.FOUR);
+		Scene scene = new Scene(notationChooser.getNode());
 		stage.setTitle("Table View Sample");
 		stage.setWidth(700);
 		stage.setHeight(500);

@@ -7,13 +7,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import videoman.DialogController;
 import videoman.core.Notation;
 import videoman.core.Video;
 import videoman.form.NotationEditionForm;
+import videoman.gui.Action;
 
 import java.util.HashSet;
 
-public class NotationEditionController extends Controller<NotationEditionForm> {
+public class NotationEditionController extends Controller<NotationEditionForm> implements DialogController {
 
 	@FXML
 	private Label videoLabel;
@@ -26,18 +28,33 @@ public class NotationEditionController extends Controller<NotationEditionForm> {
 
 	@FXML
 	void cancel(ActionEvent event) throws Exception {
-		form.gui().back();
+		//form.gui().back();
+		if (cancelAction != null)
+			cancelAction.execute();
 	}
 
 	@FXML
 	void edit(ActionEvent event) throws Exception {
 		for(Video video: videos)
 			video.setNotation(notationChoice.getValue());
-		form.gui().back();
+		//form.gui().back();
+		if (okAction != null)
+			okAction.execute();
 	}
 
 	private NotationEditionForm form;
 	private ObservableList<Video> videos;
+
+	private Action cancelAction;
+	private Action okAction;
+	@Override
+	public void setCancelAction(Action action) {
+		cancelAction = action;
+	}
+	@Override
+	public void setOkAction(Action action) {
+		okAction = action;
+	}
 	@Override
 	public void init(NotationEditionForm element) {
 		form = element;

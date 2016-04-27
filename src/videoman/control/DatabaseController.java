@@ -107,7 +107,12 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	}
 	@FXML void editNotation(ActionEvent event) throws Exception {
 		synchronized (selected) {
-			if(!selected.isEmpty()) form.gui().load(new NotationEditionForm(form.gui(), selected));
+			if(!selected.isEmpty()) {
+				//form.gui().load(new NotationEditionForm(form.gui(), selected));
+				new FormDialog(new NotationEditionForm(form.gui(), selected));
+				tableVideos.refresh();
+				setLabelsFrom(selected);
+			}
 		}
 	}
 	@FXML void requestVideoDeletion(ActionEvent event) {
