@@ -78,6 +78,11 @@ abstract public class Property implements Comparable<Property> {
 			video.add(newProperty);
 		}
 	}
+	void clear() {
+		HashSet<Video> copy = new HashSet<>(content);
+		for (Video video: copy)
+			video.remove(this);
+	}
 	public void copyVideosTo(Collection<Video> copy) {
 		copy.addAll(content);
 	}

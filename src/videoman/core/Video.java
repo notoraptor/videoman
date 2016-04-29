@@ -30,7 +30,7 @@ abstract public class Video {
 	protected FileDesc thumbnail;
 	protected Notation notation;
 	protected PropertySet videoPropertySet;
-	public Video(Database db, String outputId) throws FileException {
+	public Video(Database db, String outputId) {
 		assert db != null && outputId != null;
 		database = db;
 		id = outputId;

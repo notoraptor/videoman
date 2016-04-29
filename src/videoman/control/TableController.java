@@ -1,15 +1,28 @@
 package videoman.control;
 
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.util.Callback;
 import videoman.core.*;
 import videoman.core.database.SortColumn;
 import videoman.form.TableForm;
+
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 public class TableController extends Controller<TableForm> {
 
@@ -110,11 +123,37 @@ public class TableController extends Controller<TableForm> {
 		colName.setCellFactory(TextFieldTableCell.forTableColumn());
 		colName.setOnEditCommit((TableColumn.CellEditEvent<Video, String> t) -> {
 			t.getTableView().getItems().get(t.getTablePosition().getRow()).setName(t.getNewValue());
+			tableVideos.refresh();
 		});
 		colNotation.setCellFactory(ComboBoxTableCell.forTableColumn(Notation.values()));
 		colNotation.setOnEditCommit((TableColumn.CellEditEvent<Video, Notation> t) -> {
 			t.getTableView().getItems().get(t.getTablePosition().getRow()).setNotation(t.getNewValue());
+			tableVideos.refresh();
 		});
 		tableVideos.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		tableVideos.setRowFactory(param -> {
+			TableRow<Video> tableRow = new TableRow<>();
+			tableRow.itemProperty().addListener((observable, oldValue, newValue) -> {
+				if (newValue == null) {
+					tableRow.setTooltip(null);
+				} else {
+					tableRow.setTooltip(new Tooltip(newValue.toString()));
+					if (Desktop.isDesktopSupported()) {
+						ContextMenu contextMenu = new ContextMenu();
+						MenuItem menuItem = new MenuItem("Ouvrir le fichier");
+						menuItem.setOnAction(event -> {
+							try {
+								Desktop.getDesktop().open(new File(tableRow.getItem().getVideoPath()));
+							} catch (IOException ignored) {}
+						});
+						contextMenu.getItems().add(menuItem);
+						tableRow.contextMenuProperty().bind(
+							Bindings.when(tableRow.emptyProperty()).then((ContextMenu)null).otherwise(contextMenu)
+						);
+					}
+				}
+			});
+			return tableRow;
+		});
 	}
 }

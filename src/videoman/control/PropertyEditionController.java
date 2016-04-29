@@ -163,7 +163,7 @@ public class PropertyEditionController extends Controller<PropertyEditionForm> i
 		for (Property property: allProperties) if (!properties.contains(property)) {
 			freeProperties.add(new AddableLabel<Property>(freeProperties, takenProperties, property));
 		}
-		String typeName = Type.getPropertyName(form.type());
+		String typeName = Type.getPropertyPluralName(form.type());
 		String e = form.type() == Type.COUNTRY ? "" : "e";
 		title.setText("Modifier les " + typeName + " de " + videos.size() + " vidéos.");
 		freePropertiesLabel.setText(typeName + " non attribué" + e + "s");

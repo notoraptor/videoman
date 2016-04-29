@@ -230,7 +230,7 @@ public class Database {
 	public int size() {
 		return database.size();
 	}
-	public void load(int from, int to) throws FileException, IOException {
+	public void load(int from, int to) {
 		clear();
 		File[] files = directory.listFiles();
 		if (files == null)
@@ -254,7 +254,7 @@ public class Database {
 		}
 		databaseView.update();
 	}
-	public void load() throws IOException, FileException {
+	public void load() {
 		load(-1, -1);
 	}
 	public void save() throws FileException {
@@ -406,6 +406,13 @@ public class Database {
 	}
 	public View getDatabaseView() {
 		return databaseView;
+	}
+	public void deleteProperty(Property property) {
+		if (properties.contains(property)) {
+			property.clear();
+			refreshProperties();
+			updateView();
+		}
 	}
 	public class View {
 		private ArrayList<Video> view;

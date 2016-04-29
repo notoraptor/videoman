@@ -1,5 +1,6 @@
 package videoman.control;
 
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -8,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -17,6 +19,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.util.Callback;
 import videoman.core.*;
 import videoman.core.database.*;
 import videoman.form.*;
@@ -38,6 +41,10 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	@FXML private Button queryButton;
 	@FXML private Label statusInfo;
 	@FXML private Label statusMessage;
+	@FXML private TitledPane folderPane;
+	@FXML private TitledPane personPane;
+	@FXML private TitledPane categoryPane;
+	@FXML private TitledPane countryPane;
 	@FXML private TableView<Property> tableFolders;
 	@FXML private TableColumn<Property, String> colFolderName;
 	@FXML private TableColumn<?, ?> colFolderSize;
@@ -74,8 +81,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			if(!selected.isEmpty()) {
 				//form.gui().load(new CategoryEditionForm(form.gui(), selected));
 				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.CATEGORY));
-				categories.clear();
-				categories.addAll(view.categories());
+				updateCategoryTable();
 				tableVideos.refresh();
 				setLabelsFrom(selected);
 			}
@@ -86,8 +92,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			if(!selected.isEmpty()) {
 				//form.gui().load(new CountryEditionForm(form.gui(), selected));
 				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.COUNTRY));
-				countries.clear();
-				countries.addAll(view.countries());
+				updateCountryTable();
 				tableVideos.refresh();
 				setLabelsFrom(selected);
 			}
@@ -98,8 +103,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			if(!selected.isEmpty()) {
 				//form.gui().load(new PersonEditionForm(form.gui(), selected));
 				new FormDialog(new PropertyEditionForm(form.gui(), selected, Type.PERSON));
-				persons.clear();
-				persons.addAll(view.persons());
+				updatePersonTable();
 				tableVideos.refresh();
 				setLabelsFrom(selected);
 			}
@@ -169,7 +173,125 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			search(null);
 		}
 	}
+	@FXML void deleteCategory(ActionEvent event) {
+		deleteProperty(tableCategories);
+	}
+	@FXML void deleteCountry(ActionEvent event) {
+		deleteProperty(tableCountries);
+	}
+	@FXML void deletePerson(ActionEvent event) {
+		deleteProperty(tablePersons);
+	}
+	@FXML void transformCategoryToCountry(ActionEvent event) {
+		transformPropertyTo(tableCategories, Type.COUNTRY);
+		updateCategoryTable();
+		updateCountryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void transformCategoryToPerson(ActionEvent event) {
+		transformPropertyTo(tableCategories, Type.PERSON);
+		updateCategoryTable();
+		updatePersonTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void transformCountryToCategory(ActionEvent event) {
+		transformPropertyTo(tableCountries, Type.CATEGORY);
+		updateCountryTable();
+		updateCategoryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void transformCountryToPerson(ActionEvent event) {
+		transformPropertyTo(tableCountries, Type.PERSON);
+		updateCountryTable();
+		updatePersonTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void transformPersonToCategory(ActionEvent event) {
+		transformPropertyTo(tablePersons, Type.CATEGORY);
+		updatePersonTable();
+		updateCategoryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void transformPersonToCountry(ActionEvent event) {
+		transformPropertyTo(tablePersons, Type.COUNTRY);
+		updatePersonTable();
+		updateCountryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
 
+	private void deleteProperty(TableView<Property> table) {
+		Property property = table.getSelectionModel().getSelectedItem();
+		if (property == null) return;
+		String typeName = (property.type() == Type.COUNTRY ? "le " : "la ") + Type.getPropertyName(property.type());
+		Question question = new Question();
+		question.setQuestion("Supprimer " + typeName + " \"" + property.getValue() + "\"");
+		question.setQuestion("Voulez-vous vraiment supprimer " + typeName + " \"" + property.getValue() + "\" ?");
+		question.setPositiveLabel("supprimer " + typeName);
+		question.setPositiveAction(() -> {
+			database.deleteProperty(property);
+			switch (property.type()) {
+				case PERSON:
+					updatePersonTable();
+					break;
+				case CATEGORY:
+					updateCategoryTable();
+					break;
+				case COUNTRY:
+					updateCountryTable();
+					break;
+				default:break;
+			}
+			tableVideos.refresh();
+			synchronized (selected) {
+				setLabelsFrom(selected);
+			}
+		});
+		try {
+			question.show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	private void transformPropertyTo(TableView<Property> table, Type outType) {
+		Property property = table.getSelectionModel().getSelectedItem();
+		if (property == null) return;
+		Property newProperty = null;
+		switch (outType) {
+			case FOLDER:
+				break;
+			case PERSON:
+				newProperty = database.createPerson(property.getValue());
+				break;
+			case CATEGORY:
+				newProperty = database.createCategory(property.getValue());
+				break;
+			case COUNTRY:
+				newProperty = database.createCountry(property.getValue());
+				break;
+			case QUERY:
+				break;
+		}
+		property.transferTo(newProperty);
+		database.deleteProperty(property);
+	}
 	// todo synchroniser totalement "selected".
 
 	private DatabaseForm form;
@@ -191,6 +313,59 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	final private Label labelRootCategories = new Label();
 	final private Label labelRootCountries = new Label();
 
+	private void chooseDeletion(Type type, ActionEvent event) {
+		switch (type) {
+			case PERSON:
+				deletePerson(event);
+				break;
+			case CATEGORY:
+				deleteCategory(event);
+				break;
+			case COUNTRY:
+				deleteCountry(event);
+				break;
+			default:
+				break;
+		}
+	}
+	private void chooseTransformation(Type from, Type to, ActionEvent event) {
+		switch (from) {
+			case PERSON:
+				switch (to) {
+					case CATEGORY:
+						transformPersonToCategory(event);
+						break;
+					case COUNTRY:
+						transformPersonToCountry(event);
+						break;
+					default:break;
+				}
+				break;
+			case CATEGORY:
+				switch (to) {
+					case PERSON:
+						transformCategoryToPerson(event);
+						break;
+					case COUNTRY:
+						transformCategoryToCountry(event);
+						break;
+					default:break;
+				}
+				break;
+			case COUNTRY:
+				switch (to) {
+					case PERSON:
+						transformCountryToPerson(event);
+						break;
+					case CATEGORY:
+						transformCountryToCategory(event);
+						break;
+					default:break;
+				}
+				break;
+			default:break;
+		}
+	}
 	private class DatabaseInformer implements Informer {
 		@Override
 		public void inform(Info info) {
@@ -199,7 +374,50 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			}
 		}
 	}
-	class PropertyTableSelector implements ListChangeListener<Property> {
+	private class PropertyTableRowFactory implements Callback<TableView<Property>, TableRow<Property>> {
+		private Type typeFrom;
+		private Type typeTo1;
+		private Type typeTo2;
+		public PropertyTableRowFactory(Type from) {
+			typeFrom = from;
+			switch (typeFrom) {
+				case PERSON:
+					typeTo1 = Type.CATEGORY;
+					typeTo2 = Type.COUNTRY;
+					break;
+				case CATEGORY:
+					typeTo1 = Type.PERSON;
+					typeTo2 = Type.COUNTRY;
+					break;
+				case COUNTRY:
+					typeTo1 = Type.PERSON;
+					typeTo2 = Type.CATEGORY;
+					break;
+				default:break;
+			}
+		}
+		@Override
+		public TableRow<Property> call(TableView<Property> param) {
+			final TableRow<Property> tableRow = new TableRow<>();
+			final ContextMenu contextMenu = new ContextMenu();
+			final MenuItem menuDelete =
+					new MenuItem("Supprimer " + (typeFrom == Type.COUNTRY ? "le " : "la ") + Type.getPropertyName(typeFrom));
+			final MenuItem menuTo1 =
+					new MenuItem("Transformer en " + Type.getPropertyName(typeTo1));
+			final MenuItem menuTo2 =
+					new MenuItem("Transformer en " + Type.getPropertyName(typeTo2));
+			menuDelete.setOnAction(event -> chooseDeletion(typeFrom, event));
+			menuTo1.setOnAction(event -> chooseTransformation(typeFrom, typeTo1, event));
+			menuTo2.setOnAction(event -> chooseTransformation(typeFrom, typeTo2, event));
+			contextMenu.getItems().addAll(menuDelete, menuTo1, menuTo2);
+			tableRow.contextMenuProperty().bind(
+					Bindings.when(tableRow.emptyProperty()).then((ContextMenu)null).otherwise(contextMenu)
+			);
+			tableRow.getTooltip();
+			return tableRow;
+		}
+	}
+	private class PropertyTableSelector implements ListChangeListener<Property> {
 		private TableView<Property> focus;
 		public PropertyTableSelector(TableView<Property> focused) {
 			focus = focused;
@@ -207,37 +425,56 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		@Override
 		public void onChanged(Change<? extends Property> c) {
 			//System.err.println("SELECTION");
-			ArrayList<Property> selection = new ArrayList<>(c.getList().size());
-			for (Property property: c.getList()) if (property != null) selection.add(property);
-			if (selection.size() == 1) {
+			Property property = focus.getSelectionModel().getSelectedItem();
+			if (property != null) {
 				//System.err.println("SELECTION OK");
 				if (tableFolders != focus) tableFolders.getSelectionModel().clearSelection();
 				if (tablePersons != focus) tablePersons.getSelectionModel().clearSelection();
 				if (tableCategories != focus) tableCategories.getSelectionModel().clearSelection();
 				if (tableCountries != focus) tableCountries.getSelectionModel().clearSelection();
-				view.show(selection.get(0));
-				setPageCountFromView();
-				if (pagination.getCurrentPageIndex() == 0) {
-					int from = 0;
-					int to = Const.PAGESIZE - 1;
-					videos.clear();
-					videos.addAll(view.get(from, to));
-				} else {
-					pagination.setCurrentPageIndex(0);
-				}
+				view.show(property);
+				resetPagination();
 			}
 		}
 	}
 	private void update() {
-		folders.clear();
-		persons.clear();
-		categories.clear();
-		countries.clear();
-		folders.addAll(view.folders());
-		persons.addAll(view.persons());
-		categories.addAll(view.categories());
-		countries.addAll(view.countries());
+		updateFolderTable();
+		updatePersonTable();
+		updateCategoryTable();
+		updateCountryTable();
 		updatePagination();
+	}
+	private void updateFolderTable() {
+		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableFolders.getSortOrder());
+		folders.clear();
+		folders.addAll(view.folders());
+		if (tableFolders.getSortOrder().isEmpty())
+			tableFolders.getSortOrder().addAll(sortOrder);
+		tableFolders.sort();
+	}
+	private void updatePersonTable() {
+		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tablePersons.getSortOrder());
+		persons.clear();
+		persons.addAll(view.persons());
+		if (tablePersons.getSortOrder().isEmpty())
+			tablePersons.getSortOrder().addAll(sortOrder);
+		tablePersons.sort();
+	}
+	private void updateCategoryTable() {
+		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableCategories.getSortOrder());
+		categories.clear();
+		categories.addAll(view.categories());
+		if (tableCategories.getSortOrder().isEmpty())
+			tableCategories.getSortOrder().addAll(sortOrder);
+		tableCategories.sort();
+	}
+	private void updateCountryTable() {
+		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableCountries.getSortOrder());
+		countries.clear();
+		countries.addAll(view.countries());
+		if (tableCountries.getSortOrder().isEmpty())
+			tableCountries.getSortOrder().addAll(sortOrder);
+		tableCountries.sort();
 	}
 	private void resetPagination() {
 		setPageCountFromView();
@@ -318,13 +555,16 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			rootCountries.getChildren().add(new TreeItem<>(country.getValue()));
 		//
 		String path = video.getThumbnailPath();
-		if (path != null) try {
+		if (path != null)
 			setThumbnail(getImage(path));
-		} catch (IOException ignored) {}
 		statusInfo.setText("1 vidéo sélectionnée sur " + database.size() + " vidéos.");
 	}
 	private void setLabelsFrom(Collection<Video> selected) {
 		setEditor(!selected.isEmpty());
+		if (selected.isEmpty()) {
+			setDefaultLabels();
+			return;
+		}
 		TreeSet<String> listNames = new TreeSet<>();
 		TreeSet<VideoDuration> listDurations = new TreeSet<>();
 		TreeSet<String> listFormats = new TreeSet<>();
@@ -388,7 +628,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		editionCategories.setDisable(disabled);
 		editionCountries.setDisable(disabled);
 	}
-	public Image getImage(String path) throws IOException {
+	public Image getImage(String path) {
 		if (path == null)
 			return null;
 		//Image image = new Image(new FileInputStream(path));
@@ -479,15 +719,6 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	}
 	private void listenVideoTableSorting() {
 		tableVideos.setOnSort(event -> {
-			/*
-			if (tableVideosUpdated) {
-				tableVideosUpdated = false;
-				System.err.println("updated");
-				return;
-			}
-			tableVideosUpdated = true;
-			*/
-			//System.err.println("updated");
 			int currentPageIndex = pagination.getCurrentPageIndex();
 			ObservableList<TableColumn<Video, ?>> sortOrder = FXCollections.observableArrayList(tableVideos.getSortOrder());
 			if (sortOrder.isEmpty())
@@ -499,7 +730,6 @@ public class DatabaseController extends Controller<DatabaseForm> {
 				SortColumn sortColumn = tableForm.getController().getSortColumn(tableColumn);
 				if (sortColumn == null) {
 					new Exception("Impossible de trouver une colonne dans le tableau des vidéos.").printStackTrace();
-					tableVideosUpdated = false;
 					return;
 				}
 				sort.add(new Sort(sortColumn, sortType));
@@ -509,7 +739,6 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			int to = from + Const.PAGESIZE - 1;
 			videos.clear();
 			videos.addAll(view.get(from, to));
-			//if (tableVideos.getSortOrder().isEmpty()) tableVideos.getSortOrder().addAll(sortOrder);
 		});
 	}
 	private void listenPropertyTablesSelection() {
@@ -525,13 +754,28 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		view = database.getDatabaseView();
 		tableForm = new TableForm();
 		tableVideos = tableForm.root();
-		folders = FXCollections.observableArrayList(view.folders());
-		persons = FXCollections.observableArrayList(view.persons());
-		categories = FXCollections.observableArrayList(view.categories());
-		countries = FXCollections.observableArrayList(view.countries());
+		folders = FXCollections.observableArrayList();
+		persons = FXCollections.observableArrayList();
+		categories = FXCollections.observableArrayList();
+		countries = FXCollections.observableArrayList();
 		form.gui().setInformer(new DatabaseInformer());
-		//
 		queryButton.setText(Const.magnifierSymbol);
+		folders.addListener((ListChangeListener<? super Property>) c -> {
+			folderPane.setText("Dossiers" + (folders.isEmpty() ? "" : " (" + folders.size() + ")"));
+		});
+		persons.addListener((ListChangeListener<? super Property>) c -> {
+			personPane.setText("Personnes" + (persons.isEmpty() ? "" : " (" + persons.size() + ")"));
+		});
+		categories.addListener((ListChangeListener<? super Property>) c -> {
+			categoryPane.setText("Catégories" + (categories.isEmpty() ? "" : " (" + categories.size() + ")"));
+		});
+		countries.addListener((ListChangeListener<? super Property>) c -> {
+			countryPane.setText("Lieux" + (countries.isEmpty() ? "" : " (" + countries.size() + ")"));
+		});
+		folders.addAll(view.folders());
+		persons.addAll(view.persons());
+		categories.addAll(view.categories());
+		countries.addAll(view.countries());
 		//
 		if(Desktop.isDesktopSupported()) {
 			labelName.setOnAction(event -> {
@@ -585,8 +829,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			boolean modified = database.renamePerson(
 					t.getTableView().getItems().get(t.getTablePosition().getRow()).getValue(), t.getNewValue());
 			if(modified) {
-				persons.clear();
-				persons.addAll(view.persons());
+				updatePersonTable();
 				tableVideos.refresh();
 			}
 		});
@@ -599,8 +842,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			boolean modified = database.renameCategory(
 					t.getTableView().getItems().get(t.getTablePosition().getRow()).getValue(), t.getNewValue());
 			if(modified) {
-				categories.clear();
-				categories.addAll(view.categories());
+				updateCategoryTable();
 				tableVideos.refresh();
 			}
 		});
@@ -613,8 +855,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			boolean modified = database.renameCountry(
 					t.getTableView().getItems().get(t.getTablePosition().getRow()).getValue(), t.getNewValue());
 			if(modified) {
-				countries.clear();
-				countries.addAll(view.countries());
+				updateCountryTable();
 				tableVideos.refresh();
 			}
 		});
@@ -636,5 +877,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		});
 		setPageCountFromView();
 		statusInfo.setText(database.size() + " vidéos.");
+		tablePersons.setRowFactory(new PropertyTableRowFactory(Type.PERSON));
+		tableCategories.setRowFactory(new PropertyTableRowFactory(Type.CATEGORY));
+		tableCountries.setRowFactory(new PropertyTableRowFactory(Type.COUNTRY));
 	}
 }

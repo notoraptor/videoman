@@ -1,6 +1,5 @@
 package videoman.gui;
 
-import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;

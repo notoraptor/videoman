@@ -17,7 +17,8 @@ public class VideoDate implements Comparable<VideoDate> {
 	@Override
 	public String toString() {
 		Date date = new Date(milliseconds);
-		SimpleDateFormat sdf = new SimpleDateFormat("EEE dd LLL yyyy - HH' : 'mm' : 'ss");
+		//SimpleDateFormat sdf = new SimpleDateFormat("EEE dd LLL yyyy - HH':'mm':'ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH':'mm':'ss");
 		return sdf.format(date);
 	}
 	@Override

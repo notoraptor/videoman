@@ -2,14 +2,9 @@ package videoman;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import videoman.core.Notation;
-import videoman.gui.EditableList;
 import videoman.gui.NotationChooser;
-import videoman.gui.RemovableLabel;
-import videoman.gui.SharedLabel;
-import videoman.notification.Notification;
 
 public class Test extends Application {
 

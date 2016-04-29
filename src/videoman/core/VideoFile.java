@@ -22,7 +22,7 @@ public class VideoFile extends Video {
 		modify();
 		checkName();
 	}
-	static public boolean isSaved(File folder, File file) throws NoSuchAlgorithmException {
+	static public boolean isSaved(File folder, File file) {
 		String id = generateID(file);
 		File safeguard = safeguard(folder, id);
 		File thumbguard = thumbguard(folder, id);
