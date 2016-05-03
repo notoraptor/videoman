@@ -40,7 +40,7 @@ public class VideoSize implements Comparable<VideoSize> {
 		for (int i = 0; i < thousandCount; ++i) {
 			int start = residualDigitLength + (3 * i);
 			int end = start + 3;
-			s.append(thousandSeparator);
+			if(s.length() > 0) s.append(thousandSeparator);
 			for (int j = start; j < end; ++j)
 				s.append(integerPart.charAt(j));
 		}

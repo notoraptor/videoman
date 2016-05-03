@@ -116,4 +116,7 @@ public class PropertySet {
 	public boolean hasCountries() {
 		return set.containsKey(Type.COUNTRY);
 	}
+	public boolean has(Type type) {
+		return set.containsKey(type);
+	}
 }

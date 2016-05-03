@@ -2,6 +2,7 @@ package videoman.gui;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import videoman.form.QuestionForm;
@@ -58,6 +59,10 @@ public class Question {
 		Stage dialogStage = new Stage();
 		dialogStage.initModality(Modality.APPLICATION_MODAL);
 		Parent root = new QuestionForm(this, dialogStage).root();
+		root.setOnKeyReleased(event -> {
+			if (event.getCode().equals(KeyCode.ESCAPE))
+				dialogStage.close();
+		});
 		dialogStage.setScene(new Scene(root));
 		dialogStage.setTitle(title);
 		dialogStage.show();

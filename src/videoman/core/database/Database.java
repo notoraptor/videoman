@@ -78,6 +78,14 @@ public class Database {
 		}
 		return null;
 	}
+	private SpecialProperty createSpecialProperty(String name) {
+		SpecialProperty specialProperty = (SpecialProperty) properties.find(Type.QUERY, name);
+		if (specialProperty == null) {
+			specialProperty = new SpecialProperty(name);
+			properties.add(specialProperty);
+		}
+		return specialProperty;
+	}
 	public Person createPerson(String name) {
 		name = name.trim().toLowerCase();
 		Person p = (Person) properties.find(Type.PERSON, name);
@@ -227,6 +235,11 @@ public class Database {
 	public int countBadFiles() {
 		return badFiles.size();
 	}
+	public long getVideosTotalSize() {
+		long total = 0;
+		for (Video video: database) total += video.getSize();
+		return total;
+	}
 	public int size() {
 		return database.size();
 	}
@@ -293,6 +306,18 @@ public class Database {
 			addBadFile(file);
 		}
 		databaseView.update();
+	}
+	public void clearVideosFromPersonsToCategories() {
+		for (Video video: database) video.clearFromPersonsToCategories();
+		refreshProperties();
+		updateView();
+	}
+	@Override
+	public String toString() {
+		return Utils.orthograph(database.size(), "vidéo") + " (" + new VideoSize(getVideosTotalSize())  + ").";
+	}
+	public String asString() {
+		return toString();
 	}
 	//@unused
 	public void remove(Collection<Video> toRemove) {
@@ -414,6 +439,29 @@ public class Database {
 			updateView();
 		}
 	}
+	public void searchSameDuration() {
+		TreeMap<Long, TreeSet<Video>> cluster = new TreeMap<>();
+		for (Video video: database) {
+			TreeSet<Video> list;
+			long videoDuration = video.getDuration().toLong();
+			if (cluster.containsKey(videoDuration))
+				list = cluster.get(videoDuration);
+			else {
+				list = new TreeSet<>((v1, v2) -> v1.getName().compareTo(v2.getName()));
+				cluster.put(videoDuration, list);
+			}
+			list.add(video);
+		}
+		Iterator<Long> videoDurationIterator = cluster.keySet().iterator();
+		while (videoDurationIterator.hasNext()) {
+			if (cluster.get(videoDurationIterator.next()).size() < 2)
+				videoDurationIterator.remove();
+		}
+		Query query = new Query("vidéos aux durées identiques");
+		for (TreeSet<Video> list: cluster.values()) for (Video video: list)
+			query.add(video);
+		databaseView.show(query);
+	}
 	public class View {
 		private ArrayList<Video> view;
 		private Property showed;
@@ -467,7 +515,8 @@ public class Database {
 			if (from < 0) from = 0;
 			if (to < from) to = from;
 			if (to >= size) to = size - 1;
-			return view.subList(from, to + 1);
+			List<Video> list = view.subList(from, to + 1);
+			return list;
 		}
 		public void sort(Collection<Sort> sortOrder) {
 			//System.err.println("==== " + Math.abs(new Random().nextLong()) + " ====");
@@ -479,23 +528,38 @@ public class Database {
 			//System.err.println(view.get(0).getName());
 			//System.err.println(view.get(view.size()-1).getName());
 		}
+		private Collection<Property> getProperties(Type type) {
+			LinkedList<Property> list = new LinkedList<>();
+			String e = type == Type.COUNTRY ? "" : "e";
+			SpecialProperty specialProperty = createSpecialProperty("aucun" + e + " " + Type.getPropertyName(type));
+			for (Video video: database) {
+				if (video.has(type))
+					specialProperty.remove(video);
+				else
+					specialProperty.add(video);
+			}
+			if(!specialProperty.isEmpty())
+				list.add(specialProperty);
+			list.addAll(properties.get(type));
+			return list;
+		}
 		public Collection<Property> folders() {
-			return properties.get(Type.FOLDER);
+			return getProperties(Type.FOLDER);
 		}
 		public Collection<Property> persons() {
-			return properties.get(Type.PERSON);
+			return getProperties(Type.PERSON);
 		}
 		public Collection<Property> categories() {
-			return properties.get(Type.CATEGORY);
+			return getProperties(Type.CATEGORY);
 		}
 		public Collection<Property> countries() {
-			return properties.get(Type.COUNTRY);
+			return getProperties(Type.COUNTRY);
 		}
 		public String infoToString() {
 			if (showed == null)
-				return database.size() + " vidéos.";
+				return asString();
 			else
-				return showed.getSize() + " sélectionnées sur " + database.size() + " vidéos (\"" + showed.getValue() + "\").";
+				return showed.getSize() + " sélectionnées (\"" + showed.getValue() + "\") sur " + asString();
 		}
 	}
 }

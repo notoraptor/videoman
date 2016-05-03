@@ -19,7 +19,7 @@ public class Sort {
 		int t = 0;
 		switch (sort.column) {
 			case name:
-				t = v1.getName().compareTo(v2.getName());
+				t = v1.getName().toLowerCase().compareTo(v2.getName().toLowerCase());
 				break;
 			case dateModified:
 				t = v1.getVideoDateModified().compareTo(v2.getVideoDateModified());

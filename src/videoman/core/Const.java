@@ -27,5 +27,5 @@ public class Const {
 	public static final String defaultPersons = null;
 	public static final String defaultCategories = null;
 	public static final String defaultCountries = null;
-	public static final int PAGESIZE = 30;
+	public static final int PAGESIZE = 500;
 }

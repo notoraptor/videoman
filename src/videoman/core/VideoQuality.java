@@ -1,5 +1,7 @@
 package videoman.core;
 
+import java.util.HashMap;
+
 public class VideoQuality implements Comparable<VideoQuality> {
 	double quality;
 	public VideoQuality(Video video) {
@@ -8,7 +10,12 @@ public class VideoQuality implements Comparable<VideoQuality> {
 		double duration = video.getDuration().toDouble();
 		long fileize = video.getSize();
 		int notation = video.getNotation().ordinal();
-		quality = 16*Math.log(width) + 8*Math.log(duration) + 4*Math.log(height) + 2*Math.log(fileize) + Math.log(notation + 1);
+		quality = 	16 * Math.log(height) +
+					 8 * Math.log(duration) +
+					 4 * Math.log(width) +
+					 2 * Math.log(Math.log(fileize)) +
+					     Math.log(notation + 1);
+		//quality = 8*Math.log(width) + 4*Math.log(duration) + 2*Math.log(height) + Math.log(notation + 1);
 	}
 	@Override
 	public boolean equals(Object o) {

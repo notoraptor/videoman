@@ -73,4 +73,10 @@ public class Utils {
 	static public String[] explode(String string) {
 		return string.split(pattern);
 	}
+	static public String orthograph(int size, String word, String suffix) {
+		return size + " " + word + (size == 0 || size == 1 ? "" : suffix);
+	}
+	static public String orthograph(int size, String word) {
+		return orthograph(size, word, "s");
+	}
 }

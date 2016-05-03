@@ -4,7 +4,9 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -16,13 +18,18 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 import videoman.core.*;
+import videoman.core.database.Property;
 import videoman.core.database.SortColumn;
 import videoman.form.TableForm;
+import videoman.gui.Action;
+import videoman.gui.Executable;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 public class TableController extends Controller<TableForm> {
 
@@ -69,7 +76,7 @@ public class TableController extends Controller<TableForm> {
 	private TableColumn<Video, Notation> colNotation;
 
 	@FXML
-	private TableColumn<Video, ?> colPersons;
+	private TableColumn<Video, StringBuilder> colPersons;
 
 	@FXML
 	private TableColumn<Video, ?> colCategories;
@@ -100,6 +107,18 @@ public class TableController extends Controller<TableForm> {
 		if (column == colPath) return SortColumn.path;
 		return null;
 	}
+	public void sortAfter(Executable executable) {
+		sortAfter(tableVideos, executable);
+	}
+	static public <T> void sortAfter(TableView<T> table, Executable executable) {
+		assert table != null && executable != null;
+		ObservableList<TableColumn<T, ?>> sortOrder = FXCollections.observableArrayList(table.getSortOrder());
+		executable.run();
+		if (table.getSortOrder().isEmpty())
+			table.getSortOrder().addAll(sortOrder);
+		else
+			table.sort();
+	}
 	@Override
 	public void init(TableForm tableForm) {
 		form = tableForm;
@@ -122,14 +141,46 @@ public class TableController extends Controller<TableForm> {
 		// vidéos.
 		colName.setCellFactory(TextFieldTableCell.forTableColumn());
 		colName.setOnEditCommit((TableColumn.CellEditEvent<Video, String> t) -> {
-			t.getTableView().getItems().get(t.getTablePosition().getRow()).setName(t.getNewValue());
-			tableVideos.refresh();
+			Video video = t.getTableView().getItems().get(t.getTablePosition().getRow());
+			video.setName(t.getNewValue());
+			sortAfter(() -> tableVideos.refresh());
+			form.getDatabaseController().setLabels(video);
 		});
 		colNotation.setCellFactory(ComboBoxTableCell.forTableColumn(Notation.values()));
 		colNotation.setOnEditCommit((TableColumn.CellEditEvent<Video, Notation> t) -> {
-			t.getTableView().getItems().get(t.getTablePosition().getRow()).setNotation(t.getNewValue());
-			tableVideos.refresh();
+			Video video = t.getTableView().getItems().get(t.getTablePosition().getRow());
+			video.setNotation(t.getNewValue());
+			sortAfter(() -> tableVideos.refresh());
+			form.getDatabaseController().setLabels(video);
 		});
+		// Édition des personnes.
+		colPersons.setCellFactory(new Callback<TableColumn<Video, StringBuilder>, TableCell<Video, StringBuilder>>() {
+			@Override
+			public TableCell<Video, StringBuilder> call(TableColumn<Video, StringBuilder> param) {
+				return new TextFieldTableCell<Video, StringBuilder>(new StringConverter<StringBuilder>() {
+					@Override
+					public String toString(StringBuilder object) {
+						return object.toString();
+					}
+					@Override
+					public StringBuilder fromString(String string) {
+						return new StringBuilder(string);
+					}
+				});
+			}
+		});
+		colPersons.setOnEditCommit((TableColumn.CellEditEvent<Video, StringBuilder> t) -> {
+			Video video = t.getTableView().getItems().get(t.getTablePosition().getRow());
+			String[] persons = t.getNewValue().toString().trim().split(",");
+			LinkedList<Property> properties = new LinkedList<>();
+			for (String personName: persons)
+				properties.add(form.gui().getDatabase().createPerson(personName));
+			video.setPersons(properties);
+			form.getDatabaseController().updatePersonTable();
+			tableVideos.refresh();
+			form.getDatabaseController().setLabels(video);
+		});
+		//.
 		tableVideos.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tableVideos.setRowFactory(param -> {
 			TableRow<Video> tableRow = new TableRow<>();
@@ -140,13 +191,13 @@ public class TableController extends Controller<TableForm> {
 					tableRow.setTooltip(new Tooltip(newValue.toString()));
 					if (Desktop.isDesktopSupported()) {
 						ContextMenu contextMenu = new ContextMenu();
-						MenuItem menuItem = new MenuItem("Ouvrir le fichier");
-						menuItem.setOnAction(event -> {
-							try {
-								Desktop.getDesktop().open(new File(tableRow.getItem().getVideoPath()));
-							} catch (IOException ignored) {}
-						});
-						contextMenu.getItems().add(menuItem);
+						MenuItem menuOpenFile = new MenuItem("Ouvrir le fichier");
+						MenuItem menuOpenFolder = new MenuItem("Ouvrir le dossier contenant ce fichier");
+						MenuItem menuDeleteFile = new MenuItem("Supprimer ce fichier");
+						menuOpenFile.setOnAction(event -> form.getDatabaseController().openVideo(null));
+						menuOpenFolder.setOnAction(event -> form.getDatabaseController().openFolder(null));
+						menuDeleteFile.setOnAction(event -> form.getDatabaseController().requestVideoDeletion(null));
+						contextMenu.getItems().addAll(menuOpenFile, menuOpenFolder, menuDeleteFile);
 						tableRow.contextMenuProperty().bind(
 							Bindings.when(tableRow.emptyProperty()).then((ContextMenu)null).otherwise(contextMenu)
 						);

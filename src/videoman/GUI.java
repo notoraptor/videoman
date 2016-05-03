@@ -63,7 +63,7 @@ public class GUI extends Application {
 		notifier = new GuiNotifier(this);
 		history = new LinkedList<>();
 		stage = primaryStage;
-		stage.setMinWidth(325);
+		stage.setMinWidth(700);
 		stage.setMinHeight(500);
 		Notification.setManager(notifier);
 		loadFirst(new HomeForm(this));

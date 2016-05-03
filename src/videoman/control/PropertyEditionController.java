@@ -7,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import videoman.DialogController;
+import videoman.Utils;
 import videoman.core.Video;
 import videoman.core.database.Database;
 import videoman.core.database.Property;
@@ -14,6 +15,7 @@ import videoman.core.database.Type;
 import videoman.form.PropertyEditionForm;
 import videoman.gui.*;
 
+import java.io.IOException;
 import java.util.*;
 
 public class PropertyEditionController extends Controller<PropertyEditionForm> implements DialogController {
@@ -160,12 +162,12 @@ public class PropertyEditionController extends Controller<PropertyEditionForm> i
 			default:
 				break;
 		}
-		for (Property property: allProperties) if (!properties.contains(property)) {
-			freeProperties.add(new AddableLabel<Property>(freeProperties, takenProperties, property));
+		for (Property property: allProperties) if (!properties.contains(property) && !property.isQuery()) {
+			freeProperties.add(new AddableLabel<>(freeProperties, takenProperties, property));
 		}
 		String typeName = Type.getPropertyPluralName(form.type());
 		String e = form.type() == Type.COUNTRY ? "" : "e";
-		title.setText("Modifier les " + typeName + " de " + videos.size() + " vidéos.");
+		title.setText("Modifier les " + typeName + " de " + Utils.orthograph(videos.size(), "vidéo") + ".");
 		freePropertiesLabel.setText(typeName + " non attribué" + e + "s");
 		takenPropertiessLabel.setText(typeName + "attribué" + e + "s aux vidéos");
 		addButton.setText("ajouter un" + e + " " + typeName);
@@ -174,8 +176,23 @@ public class PropertyEditionController extends Controller<PropertyEditionForm> i
 		takenProperties.setTrash(freeProperties);
 		freeProperties.setTrash(takenProperties);
 		input.setOnKeyReleased(event -> {
-			if (event.getCode().equals(KeyCode.ENTER))
-				add(null);
+			if (event.getCode().equals(KeyCode.ENTER)) {
+				String content = input.getText().trim();
+				if (content.isEmpty()) {
+					try {
+						save(null);
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				} else
+					add(null);
+			}
+		});
+		input.textProperty().addListener((observable, oldValue, newValue) -> {
+			freeProperties.filter(input.getText());
+		});
+		takenProperties.simpleIntegerProperty().addListener((observable, oldValue, newValue) -> {
+			input.clear();
 		});
 	}
 }

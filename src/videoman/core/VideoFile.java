@@ -8,6 +8,7 @@ import videoman.core.database.Database;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.DoubleSummaryStatistics;
 
 public class VideoFile extends Video {
 	//@modifiable
@@ -71,6 +72,57 @@ public class VideoFile extends Video {
 		height = firstVideoStream.getInt("height");
 		if (firstAudioStream != null)
 			audioCodec = firstAudioStream.getString("codec_name");
+		extractSampleRate(this, firstVideoStream, firstAudioStream);
+	}
+	static public void extractSampleRate(Video video) throws InterruptedException, VideoException, IOException {
+		if (video.getFrameRate() == 0 || Double.isNaN(video.getFrameRate())) {
+			File filename = new File(video.getVideoPath());
+			JSONObject info = ffprobe(filename);
+			JSONObject firstAudioStream = null;
+			JSONObject firstVideoStream = null;
+			JSONArray streams = info.getJSONArray("streams");
+			int streamsCount = streams.length();
+			for (int i = 0; i < streamsCount; ++i) {
+				JSONObject stream = streams.getJSONObject(i);
+				String codecType = stream.getString("codec_type").toLowerCase();
+				switch (codecType) {
+					case "audio":
+						if (firstAudioStream == null)
+							firstAudioStream = stream;
+						break;
+					case "video":
+						if (firstVideoStream == null)
+							firstVideoStream = stream;
+						break;
+					default:
+						break;
+				}
+			}
+			if (firstVideoStream == null)
+				throw new VideoException(filename, "Pas de flux vidéo dans ce fichier.");
+			extractSampleRate(video, firstVideoStream, firstAudioStream);
+		}
+	}
+	static private void extractSampleRate(Video video, JSONObject firstVideoStream, JSONObject firstAudioStream) throws VideoException {
+		File filename = new File(video.getVideoPath());
+		String f = firstVideoStream.getString("avg_frame_rate");
+		if (f.equals("0") || f.equals("0/0"))
+			f = firstVideoStream.getString("r_frame_rate");
+		String[] fpieces = f.split("/");
+		if (fpieces.length > 2) throw new VideoException(filename, "Impossible d'analyser la fréquence d'images.");
+		double frameRate = Double.parseDouble(fpieces[0]);
+		if (fpieces.length == 2) frameRate /= Double.parseDouble(fpieces[1]);
+		if (Double.isNaN(frameRate)) frameRate = 24; // Par défaut, disons 24 images par seconde.
+		video.setFrameRate(frameRate);
+		if (firstAudioStream != null) {
+			String s = firstAudioStream.getString("sample_rate");
+			String[] spieces =s.split("/");
+			if (spieces.length > 2) throw new VideoException(filename, "Impossible d'analyser la fréquence audio.");
+			double sampleRate = Double.parseDouble(spieces[0]);
+			if (spieces.length == 2) sampleRate /= Double.parseDouble(spieces[1]);
+			if (Double.isNaN(sampleRate)) sampleRate = 44100; // Par défaut, disons 44100Hz.
+			video.setSampleRate(sampleRate);
+		}
 	}
 	private void generateCategories() {
 		String pattern = "(?U)[^\\p{Alpha}0-9']+";
@@ -79,7 +131,7 @@ public class VideoFile extends Video {
 				database.addCategory(this, category);
 			}
 	}
-	private JSONObject ffprobe(File file) throws IOException, InterruptedException, VideoException {
+	static private JSONObject ffprobe(File file) throws IOException, InterruptedException, VideoException {
 		//String command = "ffprobe -v quiet -print_format json -show_error -show_format -show_streams \"" + file + "\"";
 		String[] commands = new String[]{
 				"ffprobe",
@@ -94,7 +146,7 @@ public class VideoFile extends Video {
 		};
 		StringBuilder json = Utils.execute(commands);
 		if (json.length() == 0)
-			throw new VideoException(filename, "Impossible d'extraire les informations du fichier.");
+			throw new VideoException(file, "Impossible d'extraire les informations du fichier.");
 		return new JSONObject(json.toString());
 	}
 }

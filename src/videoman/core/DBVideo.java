@@ -13,7 +13,7 @@ import java.util.HashSet;
 // TODO: "thumbnail" ne doit jamais être null.
 
 public class DBVideo extends Video {
-	public DBVideo(Database db, FileDesc filepath) throws IOException, FileException {
+	public DBVideo(Database db, FileDesc filepath) throws IOException, FileException, InterruptedException {
 		super(db, filepath.getName());
 		StringBuilder content = new StringBuilder();
 		try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
@@ -91,6 +91,12 @@ public class DBVideo extends Video {
 					case thumbnail:
 						if (!thumbnail.getAbsolutePath().equals(value))
 							throw new FileException(thumbnail, "Les chemins de miniature déduits et lus sont incompatibles.\n" + value);
+						break;
+					case frameRate:
+						frameRate = Double.parseDouble(value);
+						break;
+					case sampleRate:
+						sampleRate = Double.parseDouble(value);
 						break;
 				}
 			}

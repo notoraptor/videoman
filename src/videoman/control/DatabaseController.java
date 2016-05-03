@@ -1,6 +1,5 @@
 package videoman.control;
 
-import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,10 +19,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
+import videoman.Utils;
 import videoman.core.*;
 import videoman.core.database.*;
 import videoman.form.*;
 import videoman.gui.Alert;
+import videoman.gui.Executable;
 import videoman.gui.FormDialog;
 import videoman.gui.Question;
 import videoman.notification.Info;
@@ -67,15 +68,55 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	@FXML private Label labelNotation;
 	@FXML private Button editionNotation;
 	@FXML private Button editionPersons;
-	@FXML private TreeView<String> labelPersons;
+	@FXML TitledPane labelPersonsPane;
+	@FXML TitledPane labelCategoriesPane;
+	@FXML TitledPane labelCountriesPane;
+	@FXML private Label labelPersons;
 	@FXML private Button editionCategories;
-	@FXML private TreeView<String> labelCategories;
+	@FXML private Label labelCategories;
 	@FXML private Button editionCountries;
-	@FXML private TreeView<String> labelCountries;
+	@FXML private Label labelCountries;
 	@FXML private SplitPane rightSplitPane;
 	@FXML private ScrollPane detailsPane;
 	@FXML private GridPane thumbnailPane;
 	@FXML private ImageView imageView;
+
+	@FXML void cleanCategoriesFromPersons(ActionEvent event) {
+		database.clearVideosFromPersonsToCategories();
+		updateCategoryTable();
+		tableVideos.refresh();
+	}
+	@FXML void searchSameDuration(ActionEvent event) {
+		database.searchSameDuration();
+		resetPagination();
+	}
+	@FXML void openVideo(ActionEvent event) {
+		if(Desktop.isDesktopSupported()) {
+			Object userData = labelName.getUserData();
+			if (userData != null) {
+				File file = new File((String) userData);
+				try {
+					Desktop.getDesktop().open(file);
+				} catch (IOException e) {
+					Notification.bad("Impossible d'ouvrir le chemin " + userData);
+				}
+			}
+		}
+	}
+	@FXML void openFolder(ActionEvent event) {
+		if(Desktop.isDesktopSupported()) {
+			Object userData = labelName.getUserData();
+			if (userData != null) {
+				File file = new File((String) userData);
+				File parent = file.getParentFile();
+				try {
+					Desktop.getDesktop().open(parent);
+				} catch (IOException e) {
+					Notification.bad("Impossible d'ouvrir le chemin" + parent);
+				}
+			}
+		}
+	}
 	@FXML void editCategories(ActionEvent event) throws Exception {
 		synchronized (selected) {
 			if(!selected.isEmpty()) {
@@ -138,12 +179,13 @@ public class DatabaseController extends Controller<DatabaseForm> {
 				question.setPositiveAction(() -> {
 					try {
 						database.deletePermanently(toDelete);
+						update();
 						new Alert(null, "Fichier ssupprimés", "Fichiers supprimés.");
 						// TODO
 					} catch (FileException e) {
+						update();
 						new Alert(null, "Erreur pendant la suppression de vidéos", e.getMessage());
 					}
-					update();
 				});
 				try {
 					question.show();
@@ -165,7 +207,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		if (!query.isEmpty()) {
 			int found = database.find(query);
 			resetPagination();
-			statusInfo.setText(found + " vidéos trouvés sur " + database.size() + " vidéos.");
+			statusInfo.setText(database + " " + found + " vidéos trouvés.");
 		}
 	}
 	@FXML void searchDirect(KeyEvent event) {
@@ -292,6 +334,9 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		property.transferTo(newProperty);
 		database.deleteProperty(property);
 	}
+	private void sortAfter(TableView table, Executable executable) {
+		TableController.sortAfter(table, executable);
+	}
 	// todo synchroniser totalement "selected".
 
 	private DatabaseForm form;
@@ -306,12 +351,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	private ObservableList<Property> countries;
 	final private ObservableList<Video> videos = FXCollections.observableArrayList();
 	final private HashSet<Video> selected = new HashSet<>();
-	final private TreeItem<String> rootPersons = new TreeItem<>("");
-	final private TreeItem<String> rootCategories = new TreeItem<>("");
-	final private TreeItem<String> rootCountries = new TreeItem<>("");
-	final private Label labelRootPersons = new Label();
-	final private Label labelRootCategories = new Label();
-	final private Label labelRootCountries = new Label();
+	private Video selectedVideo = null;
 
 	private void chooseDeletion(Type type, ActionEvent event) {
 		switch (type) {
@@ -410,9 +450,9 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			menuTo1.setOnAction(event -> chooseTransformation(typeFrom, typeTo1, event));
 			menuTo2.setOnAction(event -> chooseTransformation(typeFrom, typeTo2, event));
 			contextMenu.getItems().addAll(menuDelete, menuTo1, menuTo2);
-			tableRow.contextMenuProperty().bind(
-					Bindings.when(tableRow.emptyProperty()).then((ContextMenu)null).otherwise(contextMenu)
-			);
+			tableRow.setOnContextMenuRequested(event -> {
+				tableRow.setContextMenu(tableRow.isEmpty() ? null : (tableRow.getItem().isQuery() ? null : contextMenu));
+			});
 			tableRow.getTooltip();
 			return tableRow;
 		}
@@ -433,7 +473,9 @@ public class DatabaseController extends Controller<DatabaseForm> {
 				if (tableCategories != focus) tableCategories.getSelectionModel().clearSelection();
 				if (tableCountries != focus) tableCountries.getSelectionModel().clearSelection();
 				view.show(property);
-				resetPagination();
+				sortAfter(tableVideos, () -> resetPagination());
+				if (tableVideos.getItems().size() == 1)
+					tableVideos.getSelectionModel().clearAndSelect(0);
 			}
 		}
 	}
@@ -442,39 +484,31 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		updatePersonTable();
 		updateCategoryTable();
 		updateCountryTable();
-		updatePagination();
+		sortAfter(tableVideos, () -> updatePagination());
 	}
 	private void updateFolderTable() {
-		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableFolders.getSortOrder());
-		folders.clear();
-		folders.addAll(view.folders());
-		if (tableFolders.getSortOrder().isEmpty())
-			tableFolders.getSortOrder().addAll(sortOrder);
-		tableFolders.sort();
+		sortAfter(tableFolders, () -> {
+			folders.clear();
+			folders.addAll(view.folders());
+		});
 	}
-	private void updatePersonTable() {
-		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tablePersons.getSortOrder());
-		persons.clear();
-		persons.addAll(view.persons());
-		if (tablePersons.getSortOrder().isEmpty())
-			tablePersons.getSortOrder().addAll(sortOrder);
-		tablePersons.sort();
+	public void updatePersonTable() {
+		sortAfter(tablePersons, () -> {
+			persons.clear();
+			persons.addAll(view.persons());
+		});
 	}
 	private void updateCategoryTable() {
-		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableCategories.getSortOrder());
-		categories.clear();
-		categories.addAll(view.categories());
-		if (tableCategories.getSortOrder().isEmpty())
-			tableCategories.getSortOrder().addAll(sortOrder);
-		tableCategories.sort();
+		sortAfter(tableCategories, () -> {
+			categories.clear();
+			categories.addAll(view.categories());
+		});
 	}
 	private void updateCountryTable() {
-		ObservableList<TableColumn<Property, ?>> sortOrder = FXCollections.observableArrayList(tableCountries.getSortOrder());
-		countries.clear();
-		countries.addAll(view.countries());
-		if (tableCountries.getSortOrder().isEmpty())
-			tableCountries.getSortOrder().addAll(sortOrder);
-		tableCountries.sort();
+		sortAfter(tableCountries, () -> {
+			countries.clear();
+			countries.addAll(view.countries());
+		});
 	}
 	private void resetPagination() {
 		setPageCountFromView();
@@ -500,7 +534,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		}
 	}
 	private void setDefaultStatus() {
-		statusInfo.setText(database.size() + " vidéos.");
+		statusInfo.setText(database.toString());
 	}
 	private void setDefaultLabels() {
 		setEditor(false);
@@ -511,53 +545,34 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		labelFormat.setText(Const.defaultFormat);
 		labelSize.setText(Const.defaultSize);
 		labelNotation.setText(Const.defaultNotation.toString());
-		//labelPersons.setText(Const.defaultPersons);
-		rootPersons.getChildren().clear();
-		labelRootPersons.setText("Aucune personne");
-		//labelCategories.setText(Const.defaultCategories);
-		rootCategories.getChildren().clear();
-		labelRootCategories.setText("Aucune catégorie");
-		//labelCountries.setText(Const.defaultCountries);
-		rootCountries.getChildren().clear();
-		labelRootCountries.setText("Aucun lieu");
+		labelPersons.setText(Const.defaultPersons);
+		labelCategories.setText(Const.defaultCategories);
+		labelCountries.setText(Const.defaultCountries);
+		labelPersonsPane.setText("(aucune personne)");
+		labelCategoriesPane.setText("(aucune catégorie)");
+		labelCountriesPane.setText("(aucun lieu)");
 		setThumbnail(null);
 		setDefaultStatus();
 	}
-	private void setLabels(Video video) {
+	public void setLabels(Video video) {
 		setEditor(true);
 		labelName.setText(video.getName());
 		labelName.setUserData(video.getVideoPath());
 		labelOpenFolder.setText("(ouvrir le dossier parent)");
-		labelDuration.setText(video.getDuration().toString());
+		labelDuration.setText(video.getDuration().toString() + "\n(" + video.getWidth() + " x " + video.getHeight() + ")");
 		labelFormat.setText(video.concatenateFormat());
 		labelSize.setText(video.getHumanSize().toString());
 		labelNotation.setText(video.getNotation().toString());
-		//labelPersons.setText(video.getPersons().toString());
-		Collection<Property> persons = new LinkedList<>();
-		video.addPersonsTo(persons);
-		rootPersons.getChildren().clear();
-		labelRootPersons.setText(persons.size() + " personnes");
-		for (Property person: persons)
-			rootPersons.getChildren().add(new TreeItem<>(person.getValue()));
-		//labelCategories.setText(video.getCategories().toString());
-		Collection<Property> categories = new LinkedList<>();
-		video.addCategoriesTo(categories);
-		rootCategories.getChildren().clear();
-		labelRootCategories.setText(categories.size() + " catégories");
-		for (Property category: categories)
-				rootCategories.getChildren().add(new TreeItem<>(category.getValue()));
-		//labelCountries.setText(video.getCountries().toString());
-		Collection<Property> countries = new LinkedList<>();
-		video.addCountriesTo(countries);
-		rootCountries.getChildren().clear();
-		labelRootCountries.setText(countries.size() + " lieux");
-		for (Property country: countries)
-			rootCountries.getChildren().add(new TreeItem<>(country.getValue()));
-		//
+		labelPersons.setText(video.getPersons("\n").toString());
+		labelCategories.setText(video.getCategories("\n").toString());
+		labelCountries.setText(video.getCountries("\n").toString());
+		labelPersonsPane.setText(Utils.orthograph(video.countPersons(), "personne"));
+		labelCategoriesPane.setText(Utils.orthograph(video.countCategories(), "catégorie"));
+		labelCountriesPane.setText(Utils.orthograph(video.countCountries(), "lieu", "x"));
 		String path = video.getThumbnailPath();
 		if (path != null)
 			setThumbnail(getImage(path));
-		statusInfo.setText("1 vidéo sélectionnée sur " + database.size() + " vidéos.");
+		statusInfo.setText(database + " 1 vidéo sélectionnée.");
 	}
 	private void setLabelsFrom(Collection<Video> selected) {
 		setEditor(!selected.isEmpty());
@@ -567,6 +582,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		}
 		TreeSet<String> listNames = new TreeSet<>();
 		TreeSet<VideoDuration> listDurations = new TreeSet<>();
+		TreeSet<Integer> listWidths = new TreeSet<>();
+		TreeSet<Integer> listHeights = new TreeSet<>();
 		TreeSet<String> listFormats = new TreeSet<>();
 		TreeSet<VideoSize> listSizes = new TreeSet<>();
 		TreeSet<Notation> listNotations = new TreeSet<>();
@@ -576,6 +593,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		for (Video video : selected) {
 			listNames.add(video.getName());
 			listDurations.add(video.getDuration());
+			listWidths.add(video.getWidth());
+			listHeights.add(video.getHeight());
 			listFormats.add(video.concatenateFormat());
 			listSizes.add(video.getHumanSize());
 			listNotations.add(video.getNotation());
@@ -583,42 +602,41 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			video.addCategoriesTo(listCategories);
 			video.addCountriesTo(listCountries);
 		}
-		String stringNames = listNames.size() == 1 ? listNames.iterator().next() : "...";
+		String stringNames = listNames.size() == 1 ? listNames.first() : "...";
 		String stringDurations = listDurations.size() == 1 ?
-				listDurations.iterator().next().toString() :
-				"De " + listDurations.first() + " à " + listDurations.last();
-		String stringFormats = listFormats.size() == 1 ? listFormats.iterator().next() : "...";
+				listDurations.first().toString() : "De " + listDurations.first() + " à " + listDurations.last();
+		String stringDimensions;
+		if (listWidths.size() == 1 && listHeights.size() == 1) {
+			stringDimensions = "(" + listWidths.first() + " x " + listHeights.first() + ")";
+		} else {
+			String stringWidth = listWidths.size() == 1 ? listWidths.first().toString() : listWidths.first() + "-" + listWidths.last();
+			String stringHeight = listHeights.size() == 1 ? listHeights.first().toString() : listHeights.first() + "-" + listHeights.last();
+			stringDimensions = "(" + stringWidth + " x " + stringHeight + ")";
+		}
+		String stringFormats = listFormats.size() == 1 ? listFormats.first() : "...";
 		String stringSizes = listSizes.size() == 1 ?
-				listSizes.iterator().next().toString() :
-				"De " + listSizes.first() + " à " + listSizes.last();
+				listSizes.first().toString() : "De " + listSizes.first() + " à " + listSizes.last();
 		String stringNotations = listNotations.size() == 1 ?
-				listNotations.iterator().next().toString() :
-				"De " + listNotations.first().ordinal() + " à " + listNotations.last().ordinal();
+				listNotations.first().toString() : "De " + listNotations.first().ordinal() + " à " + listNotations.last().ordinal();
+		StringBuilder stringPersons = Utils.implode("\n", listPersons);
+		StringBuilder stringCategories = Utils.implode("\n", listCategories);
+		StringBuilder stringCountries = Utils.implode("\n", listCountries);
 		labelName.setText(stringNames);
 		labelName.setUserData(null);
 		labelOpenFolder.setText("...");
-		labelDuration.setText(stringDurations);
+		labelDuration.setText(stringDurations + '\n' + stringDimensions);
 		labelFormat.setText(stringFormats);
 		labelSize.setText(stringSizes);
 		labelNotation.setText(stringNotations);
-		//labelPersons.setText(stringPersons.toString());
-		labelRootPersons.setText(listPersons.size() + " personnes dans " + selected.size() + " vidéos");
-		rootPersons.getChildren().clear();
-		for (Property person: listPersons)
-			rootPersons.getChildren().add(new TreeItem<>(person.getValue()));
-		//labelCategories.setText(stringCategories.toString());
-		labelRootCategories.setText(listCategories.size() + " catégories dans " + selected.size() + " vidéos");
-		rootCategories.getChildren().clear();
-		for (Property category: listCategories)
-				rootCategories.getChildren().add(new TreeItem<>(category.getValue()));
-		//labelCountries.setText(stringCountries.toString());
-		labelRootCountries.setText(listCountries.size() + " lieux dans " + selected.size() + " vidéos");
-		rootCountries.getChildren().clear();
-		for (Property country: listCountries)
-			rootCountries.getChildren().add(new TreeItem<>(country.getValue()));
-		//
+		labelPersons.setText(stringPersons.toString());
+		labelCategories.setText(stringCategories.toString());
+		labelCountries.setText(stringCountries.toString());
+		labelPersonsPane.setText(Utils.orthograph(listPersons.size(), "personne") + " (" + Utils.orthograph(selected.size(), "vidéo") + ")");
+		labelCategoriesPane.setText(Utils.orthograph(listCategories.size(), "catégorie") + " (" + Utils.orthograph(selected.size(), "vidéo") + ")");
+		labelCountriesPane.setText(Utils.orthograph(listCountries.size(), "lieu", "x") + " (" + Utils.orthograph(selected.size(), "vidéo") + ")");
 		setThumbnail(null);
-		statusInfo.setText(selected.size() + " vidéos sélectionnées sur " + database.size() + " vidéos..");
+		statusInfo.setText(database + " " +
+				Utils.orthograph(selected.size(), " vidéo") + " sélectionnée" + (selected.size() < 2 ? "" : "s") + ".");
 	}
 	private void setEditor(boolean editable) {
 		boolean disabled = !editable;
@@ -704,6 +722,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	private void listenVideoTableSelection() {
 		tableVideos.getSelectionModel().getSelectedItems().addListener((ListChangeListener<Video>) c -> {
 			synchronized (selected) {
+				selectedVideo = null;
 				selected.clear();
 				for (Video video : c.getList()) if (video != null) selected.add(video);
 				int selectedSize = selected.size();
@@ -711,6 +730,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 					setDefaultLabels();
 				} else if (selectedSize == 1) {
 					setLabels(selected.iterator().next());
+					selectedVideo = selected.iterator().next();
 				} else {
 					setLabelsFrom(selected);
 				}
@@ -719,6 +739,7 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	}
 	private void listenVideoTableSorting() {
 		tableVideos.setOnSort(event -> {
+			//System.err.println("sorting");
 			int currentPageIndex = pagination.getCurrentPageIndex();
 			ObservableList<TableColumn<Video, ?>> sortOrder = FXCollections.observableArrayList(tableVideos.getSortOrder());
 			if (sortOrder.isEmpty())
@@ -747,12 +768,16 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		tableCategories.getSelectionModel().getSelectedItems().addListener(new PropertyTableSelector(tableCategories));
 		tableCountries.getSelectionModel().getSelectedItems().addListener(new PropertyTableSelector(tableCountries));
 	}
+	public DatabaseForm getForm() {
+		return form;
+	}
 	@Override
 	public void init(DatabaseForm databaseForm) throws Exception {
+		//statusInfo.textProperty().addListener((observable, oldValue, newValue) -> System.err.println(newValue));
 		form = databaseForm;
 		database = form.getDatabase();
 		view = database.getDatabaseView();
-		tableForm = new TableForm();
+		tableForm = new TableForm(this);
 		tableVideos = tableForm.root();
 		folders = FXCollections.observableArrayList();
 		persons = FXCollections.observableArrayList();
@@ -777,44 +802,6 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		categories.addAll(view.categories());
 		countries.addAll(view.countries());
 		//
-		if(Desktop.isDesktopSupported()) {
-			labelName.setOnAction(event -> {
-				Object userData = labelName.getUserData();
-				if (userData != null) {
-					File file = new File((String) userData);
-					try {
-						Desktop.getDesktop().open(file);
-					} catch (IOException e) {
-						Notification.bad("Impossible d'ouvrir le chemin " + userData);
-					}
-				}
-			});
-			labelOpenFolder.setOnAction(event -> {
-				Object userData = labelName.getUserData();
-				if (userData != null) {
-					File file = new File((String) userData);
-					File parent = file.getParentFile();
-					try {
-						Desktop.getDesktop().open(parent);
-					} catch (IOException e) {
-						Notification.bad("Impossible d'ouvrir le chemin" + parent);
-					}
-				}
-			});
-		}
-		//
-		labelRootPersons.setStyle("-fx-font-weight:bold;");
-		labelRootCategories.setStyle("-fx-font-weight:bold;");
-		labelRootCountries.setStyle("-fx-font-weight:bold;");
-		rootPersons.setGraphic(labelRootPersons);
-		rootCategories.setGraphic(labelRootCategories);
-		rootCountries.setGraphic(labelRootCountries);
-		rootPersons.setExpanded(true);
-		rootCategories.setExpanded(true);
-		rootCountries.setExpanded(true);
-		labelPersons.setRoot(rootPersons);
-		labelCategories.setRoot(rootCategories);
-		labelCountries.setRoot(rootCountries);
 		listenRightSplitPane();
 		setDefaultLabels();
 		// folders
@@ -876,9 +863,16 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			return tableVideos;
 		});
 		setPageCountFromView();
-		statusInfo.setText(database.size() + " vidéos.");
+		statusInfo.setText(database.toString());
 		tablePersons.setRowFactory(new PropertyTableRowFactory(Type.PERSON));
 		tableCategories.setRowFactory(new PropertyTableRowFactory(Type.CATEGORY));
 		tableCountries.setRowFactory(new PropertyTableRowFactory(Type.COUNTRY));
+		tableVideos.setOnKeyReleased(event -> {
+			if (event.getCode().equals(KeyCode.ENTER)) {
+				openVideo(null);
+			} else if (event.getCode().equals(KeyCode.DELETE)) {
+				requestVideoDeletion(null);
+			}
+		});
 	}
 }

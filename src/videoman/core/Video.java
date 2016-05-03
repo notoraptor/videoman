@@ -10,12 +10,15 @@ import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Set;
 
 abstract public class Video {
 	protected FileDesc filename;
 	protected long dateAdded;
 	protected String format;
+	protected double frameRate;
+	protected double sampleRate;
 	protected long size;
 	protected double duration;
 	protected String audioCodec;
@@ -154,6 +157,15 @@ abstract public class Video {
 	public StringBuilder getCountries() {
 		return videoPropertySet.implodeCountries(Const.delimiter);
 	}
+	public StringBuilder getPersons(String delimiter) {
+		return videoPropertySet.implodePersons(delimiter);
+	}
+	public StringBuilder getCategories(String delimiter) {
+		return videoPropertySet.implodeCategories(delimiter);
+	}
+	public StringBuilder getCountries(String delimiter) {
+		return videoPropertySet.implodeCountries(delimiter);
+	}
 	public StringBuilder getSuperInfo() {
 		StringBuilder s = new StringBuilder();
 		s.append(filename.getAbsolutePath().toLowerCase());
@@ -176,6 +188,9 @@ abstract public class Video {
 	}
 	public String concatenateFormat() {
 		return filename.getExtension() + " / " + format + " / " + videoCodec + " / " + audioCodec;
+	}
+	public boolean has(Type type) {
+		return videoPropertySet.has(type);
 	}
 	public boolean hasProperty(Property property) {
 		return videoPropertySet.contains(property);
@@ -219,6 +234,20 @@ abstract public class Video {
 			throw new FileException(thumbnail, "Impossible de supprimer cette miniature de la base de données.");
 		System.out.println("Vidéo supprimée: " + filename.getAbsolutePath());
 	}
+	public double getFrameRate() {
+		return frameRate;
+	}
+	public double getSampleRate() {
+		return sampleRate;
+	}
+	public void setFrameRate(double d) {
+		if (d != frameRate) modify();
+		frameRate = d;
+	}
+	public void setSampleRate(double d) {
+		if (d != sampleRate) modify();
+		sampleRate = d;
+	}
 	@Override
 	public String toString() {
 		return filename.getName() + " (" + filename.getExtension() + ", " + getHumanSize() + ')';
@@ -240,6 +269,10 @@ abstract public class Video {
 		videoManStringWriter.write(Field.dateAdded + "\t" + dateAdded);
 		videoManStringWriter.newLine();
 		videoManStringWriter.write(Field.format + "\t" + format);
+		videoManStringWriter.newLine();
+		videoManStringWriter.write(Field.frameRate + "\t" + frameRate);
+		videoManStringWriter.newLine();
+		videoManStringWriter.write(Field.sampleRate + "\t" + sampleRate);
 		videoManStringWriter.newLine();
 		videoManStringWriter.write(Field.size + "\t" + size);
 		videoManStringWriter.newLine();
@@ -347,5 +380,31 @@ abstract public class Video {
 			if (p.remove(this)) modify();
 		for (Property p: toAdd)
 			if (p.add(this)) modify();
+	}
+	public int countPersons() {
+		return videoPropertySet.sizeOf(Type.PERSON);
+	}
+	public int countCategories() {
+		return videoPropertySet.sizeOf(Type.CATEGORY);
+	}
+	public int countCountries() {
+		return videoPropertySet.sizeOf(Type.COUNTRY);
+	}
+	//@modifiable
+	public void setPersons(LinkedList<Property> persons) {
+		LinkedList<Property> old = new LinkedList<>(videoPropertySet.get(Type.PERSON));
+		for (Property oldProperty: old) remove(oldProperty);
+		for (Property newProperty: persons) add(newProperty);
+		modify();
+	}
+	public void clearFromPersonsToCategories() {
+		for (Property person: videoPropertySet.get(Type.PERSON)) {
+			String[] pieces = Utils.explode(person.getValue());
+			for (String piece: pieces) {
+				Category category = (Category) videoPropertySet.find(Type.CATEGORY, piece);
+				if (category != null)
+					category.remove(this);
+			}
+		}
 	}
 }
