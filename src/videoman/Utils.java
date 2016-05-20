@@ -14,7 +14,7 @@ public class Utils {
 	static final public String endl = System.getProperty("line.separator");
 	static final public String hex = "0123456789ABCDEF";
 	static final public Charset UTF8 = StandardCharsets.UTF_8;
-	static final private String pattern = "(?U)[^\\p{Alpha}0-9']+";
+	static final private String pattern = "(?U)[^\\p{Alpha}0-9]+";
 	static public String hash(String message) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("SHA-512");
 		byte[] hash = md.digest(message.getBytes(Utils.UTF8));

@@ -39,13 +39,16 @@
          <MenuBar>
             <!--suppress JavaFxDefaultTag -->
             <Menu mnemonicParsing="false" text="Base de données">
+               <MenuItem mnemonicParsing="false" onAction="#searchSameDuration" text="Chercher les vidéos de même durée" />
+               <MenuItem mnemonicParsing="false" onAction="#searchSameCategories" text="Chercher les vidéos aux mêmes catégories" />
+            </Menu>
+            <Menu mnemonicParsing="false" text="Propriétés">
                <!--suppress JavaFxDefaultTag -->
                <MenuItem mnemonicParsing="false" onAction="#cleanCategoriesFromPersons" text="Nettoyer les catégories à partir des personnes" />
-               <MenuItem mnemonicParsing="false" onAction="#searchSameDuration" text="Chercher les vidéos de même durée" />
-            </Menu>
-            <Menu mnemonicParsing="false" text="Help">
                <!--suppress JavaFxDefaultTag -->
-               <MenuItem mnemonicParsing="false" text="About" />
+               <MenuItem mnemonicParsing="false" onAction="#deletePersons" text="Supprimer des personnes" />
+               <MenuItem mnemonicParsing="false" onAction="#deleteCategories" text="Supprimer des categories" />
+               <MenuItem mnemonicParsing="false" onAction="#deleteCountries" text="Supprimer des lieux" />
             </Menu>
          </MenuBar>
          <BorderPane GridPane.columnIndex="1">
@@ -147,114 +150,116 @@
             <!--suppress JavaFxDefaultTag -->
             <ScrollPane fx:id="detailsPane" fitToWidth="true">
                <VBox alignment="TOP_CENTER" spacing="5.0">
-                  <children>
-                     <Button fx:id="editionDeletion" mnemonicParsing="false" onAction="#requestVideoDeletion" text="Supprimer" textFill="RED">
-                        <font>
-                           <Font name="System Bold" size="12.0" />
-                        </font>
-                        <VBox.margin>
-                           <Insets top="10.0" />
-                        </VBox.margin>
-                     </Button>
-                     <Hyperlink fx:id="labelName" alignment="CENTER" maxWidth="1.7976931348623157E308" onAction="#openVideo" text="Nom [chemin vers le fichier]" textAlignment="CENTER" wrapText="true">
-                        <padding>
-                           <Insets left="5.0" right="5.0" />
-                        </padding>
-                        <effect>
-                           <InnerShadow />
-                        </effect>
-                        <font>
-                           <Font name="System Bold" size="15.0" />
-                        </font>
-                     </Hyperlink>
-                     <Hyperlink fx:id="labelOpenFolder" alignment="CENTER" maxWidth="1.7976931348623157E308" onAction="#openFolder" text="Hyperlink" textAlignment="CENTER" wrapText="true" />
-                     <Label fx:id="labelFormat" alignment="CENTER" maxWidth="1.7976931348623157E308" text="EXTENSION / Format / Codec Vidéo / Codec Audio" textAlignment="CENTER" wrapText="true">
-                        <padding>
-                           <Insets left="5.0" right="5.0" />
-                        </padding>
-                        <effect>
-                           <InnerShadow />
-                        </effect>
-                     </Label>
-                     <Label fx:id="labelDuration" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Durée (Largeur x Hauteur)" textAlignment="CENTER" wrapText="true">
-                        <padding>
-                           <Insets left="5.0" right="5.0" />
-                        </padding>
-                        <effect>
-                           <InnerShadow />
-                        </effect>
-                     </Label>
-                     <Label fx:id="labelSize" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Taille en Ko" textAlignment="CENTER" textFill="BLUE" wrapText="true">
-                        <padding>
-                           <Insets left="5.0" right="5.0" />
-                        </padding>
-                        <font>
-                           <Font name="System Italic" size="12.0" />
-                        </font>
-                     </Label>
-                     <BorderPane>
-                        <center>
-                           <Label fx:id="labelNotation" maxWidth="1.7976931348623157E308" text="Notation" textAlignment="CENTER" wrapText="true">
-                              <padding>
-                                 <Insets left="5.0" />
-                              </padding>
+                  <Button fx:id="editionDeletion" mnemonicParsing="false" onAction="#requestVideoDeletion"
+                          text="Supprimer" textFill="RED">
+                     <font>
+                        <Font name="System Bold" size="12.0"/>
+                     </font>
+                     <VBox.margin>
+                        <Insets top="10.0"/>
+                     </VBox.margin>
+                  </Button>
+                  <Hyperlink fx:id="labelName" alignment="CENTER" maxWidth="1.7976931348623157E308"
+                             onAction="#openVideo" text="Nom [chemin vers le fichier]" textAlignment="CENTER"
+                             wrapText="true">
+                     <padding>
+                        <Insets left="5.0" right="5.0"/>
+                     </padding>
+                     <effect>
+                        <InnerShadow/>
+                     </effect>
+                     <font>
+                        <Font name="System Bold" size="15.0"/>
+                     </font>
+                  </Hyperlink>
+                  <Hyperlink fx:id="labelOpenFolder" alignment="CENTER" maxWidth="1.7976931348623157E308"
+                             onAction="#openFolder" text="Hyperlink" textAlignment="CENTER" wrapText="true"/>
+                  <Label fx:id="labelFormat" alignment="CENTER" maxWidth="1.7976931348623157E308"
+                         text="EXTENSION / Format / Codec Vidéo / Codec Audio" textAlignment="CENTER" wrapText="true">
+                     <padding>
+                        <Insets left="5.0" right="5.0"/>
+                     </padding>
+                     <effect>
+                        <InnerShadow/>
+                     </effect>
+                  </Label>
+                  <Label fx:id="labelDuration" alignment="CENTER" maxWidth="1.7976931348623157E308"
+                         text="Durée (Largeur x Hauteur)" textAlignment="CENTER" wrapText="true">
+                     <padding>
+                        <Insets left="5.0" right="5.0"/>
+                     </padding>
+                     <effect>
+                        <InnerShadow/>
+                     </effect>
+                  </Label>
+                  <Label fx:id="labelSize" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Taille en Ko"
+                         textAlignment="CENTER" textFill="BLUE" wrapText="true">
+                     <padding>
+                        <Insets left="5.0" right="5.0"/>
+                     </padding>
+                     <font>
+                        <Font name="System Italic" size="12.0"/>
+                     </font>
+                  </Label>
+                  <BorderPane>
+                     <center>
+                        <Label fx:id="labelNotation" maxWidth="1.7976931348623157E308" text="Notation"
+                               textAlignment="CENTER" wrapText="true">
+                           <padding>
+                              <Insets left="5.0"/>
+                           </padding>
+                        </Label>
+                     </center>
+                     <right>
+                        <Button fx:id="editionNotation" mnemonicParsing="false" onAction="#editNotation" text="Modifier"
+                                BorderPane.alignment="CENTER">
+                           <BorderPane.margin>
+                              <Insets right="5.0"/>
+                           </BorderPane.margin>
+                        </Button>
+                     </right>
+                  </BorderPane>
+                  <VBox alignment="TOP_CENTER">
+                     <TitledPane fx:id="labelPersonsPane" text="Personnes">
+                        <VBox alignment="TOP_CENTER" spacing="10.0">
+                           <Button fx:id="editionPersons" alignment="CENTER_RIGHT" contentDisplay="RIGHT"
+                                   mnemonicParsing="false" onAction="#editPersons" text="Modifier"
+                                   textAlignment="RIGHT"/>
+                           <Label fx:id="labelPersons" alignment="CENTER" text="Label" textAlignment="CENTER"
+                                  wrapText="true">
+                              <font>
+                                 <Font name="System Bold Italic" size="12.0"/>
+                              </font>
                            </Label>
-                        </center>
-                        <right>
-                           <Button fx:id="editionNotation" mnemonicParsing="false" onAction="#editNotation" text="Modifier" BorderPane.alignment="CENTER">
-                              <BorderPane.margin>
-                                 <Insets right="5.0" />
-                              </BorderPane.margin>
-                           </Button>
-                        </right>
-                     </BorderPane>
-                     <VBox alignment="TOP_CENTER">
-                        <children>
-                           <TitledPane fx:id="labelPersonsPane" text="Personnes">
-                              <content>
-                                 <VBox alignment="TOP_CENTER" spacing="10.0">
-                                    <children>
-                                       <Button fx:id="editionPersons" alignment="CENTER_RIGHT" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#editPersons" text="Modifier" textAlignment="RIGHT" />
-                                       <Label fx:id="labelPersons" alignment="CENTER" text="Label" textAlignment="CENTER" wrapText="true">
-                                          <font>
-                                             <Font name="System Bold Italic" size="12.0" />
-                                          </font>
-                                       </Label>
-                                    </children>
-                                 </VBox>
-                              </content>
-                           </TitledPane>
-                           <TitledPane fx:id="labelCategoriesPane" text="Catégories">
-                              <content>
-                                 <VBox alignment="TOP_CENTER" spacing="10.0">
-                                    <children>
-                                       <Button fx:id="editionCategories" alignment="CENTER_RIGHT" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#editCategories" text="Modifier" textAlignment="RIGHT" />
-                                       <Label fx:id="labelCategories" alignment="CENTER" text="Label" textAlignment="CENTER" wrapText="true">
-                                          <font>
-                                             <Font name="System Bold Italic" size="12.0" />
-                                          </font>
-                                       </Label>
-                                    </children>
-                                 </VBox>
-                              </content>
-                           </TitledPane>
-                           <TitledPane fx:id="labelCountriesPane" text="Lieux">
-                              <content>
-                                 <VBox alignment="TOP_CENTER" spacing="10.0">
-                                    <children>
-                                       <Button fx:id="editionCountries" alignment="CENTER_RIGHT" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#editCountries" text="Modifier" textAlignment="RIGHT" />
-                                       <Label fx:id="labelCountries" alignment="CENTER" text="Label" textAlignment="CENTER" wrapText="true">
-                                          <font>
-                                             <Font name="System Bold Italic" size="12.0" />
-                                          </font>
-                                       </Label>
-                                    </children>
-                                 </VBox>
-                              </content>
-                           </TitledPane>
-                        </children>
-                     </VBox>
-                  </children>
+                        </VBox>
+                     </TitledPane>
+                     <TitledPane fx:id="labelCategoriesPane" text="Catégories">
+                        <VBox alignment="TOP_CENTER" spacing="10.0">
+                           <Button fx:id="editionCategories" alignment="CENTER_RIGHT" contentDisplay="RIGHT"
+                                   mnemonicParsing="false" onAction="#editCategories" text="Modifier"
+                                   textAlignment="RIGHT"/>
+                           <Label fx:id="labelCategories" alignment="CENTER" text="Label"
+                                  textAlignment="CENTER" wrapText="true">
+                              <font>
+                                 <Font name="System Bold Italic" size="12.0"/>
+                              </font>
+                           </Label>
+                        </VBox>
+                     </TitledPane>
+                     <TitledPane fx:id="labelCountriesPane" text="Lieux">
+                        <VBox alignment="TOP_CENTER" spacing="10.0">
+                           <Button fx:id="editionCountries" alignment="CENTER_RIGHT" contentDisplay="RIGHT"
+                                   mnemonicParsing="false" onAction="#editCountries" text="Modifier"
+                                   textAlignment="RIGHT"/>
+                           <Label fx:id="labelCountries" alignment="CENTER" text="Label" textAlignment="CENTER"
+                                  wrapText="true">
+                              <font>
+                                 <Font name="System Bold Italic" size="12.0"/>
+                              </font>
+                           </Label>
+                        </VBox>
+                     </TitledPane>
+                  </VBox>
                </VBox>
             </ScrollPane>
             <GridPane fx:id="thumbnailPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="100.0" style="-fx-background-color: rgb(240,240,255);">

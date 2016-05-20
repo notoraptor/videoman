@@ -7,5 +7,5 @@ public enum FormName {
 	question,
 	table,
 	notationEdition,
-	propertyEdition
+	propertyDeletion, propertyEdition
 }

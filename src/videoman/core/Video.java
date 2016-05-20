@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
 
+// TODO: Prendre en compte stream[video].display_aspect_ratio pour afficher la miniature avec le bon ratio.
+
 abstract public class Video {
 	protected FileDesc filename;
 	protected long dateAdded;
@@ -234,6 +236,14 @@ abstract public class Video {
 			throw new FileException(thumbnail, "Impossible de supprimer cette miniature de la base de données.");
 		System.out.println("Vidéo supprimée: " + filename.getAbsolutePath());
 	}
+	public void deleteEntry() throws FileException {
+		File sg = safeguard();
+		if (sg.exists() && !sg.delete())
+			throw new FileException(sg, "Impossible de supprimer cette entrée de la base de données.");
+		if (thumbnail.exists() && !thumbnail.delete())
+			throw new FileException(thumbnail, "Impossible de supprimer cette miniature de la base de données.");
+		System.err.println("Entrée supprimée: " + filename.getAbsolutePath());
+	}
 	public double getFrameRate() {
 		return frameRate;
 	}
@@ -250,7 +260,8 @@ abstract public class Video {
 	}
 	@Override
 	public String toString() {
-		return filename.getName() + " (" + filename.getExtension() + ", " + getHumanSize() + ')';
+		String printId = id.length() <= 10 ? id : id.substring(0, 10) + "...";
+		return filename.getName() + " (" + filename.getExtension() + ", " + getHumanSize() + ") [ID: " + printId + "]";
 	}
 	// @modifier
 	public void modify() {

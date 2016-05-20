@@ -1,34 +1,24 @@
 package videoman.control;
 
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import videoman.core.*;
 import videoman.core.database.Property;
 import videoman.core.database.SortColumn;
 import videoman.form.TableForm;
-import videoman.gui.Action;
 import videoman.gui.Executable;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 
 public class TableController extends Controller<TableForm> {

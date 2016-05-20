@@ -1,9 +1,7 @@
 package videoman.form;
 
-import videoman.GUI;
 import videoman.control.DatabaseController;
 import videoman.control.TableController;
-import videoman.core.database.Database;
 
 public class TableForm extends Form<TableController> {
 	private DatabaseController databaseController;

@@ -1,7 +1,5 @@
 package videoman.core;
 
-import java.util.HashMap;
-
 public class VideoQuality implements Comparable<VideoQuality> {
 	double quality;
 	public VideoQuality(Video video) {

@@ -36,4 +36,8 @@ public class FileDesc extends File {
 		File parent = path.getParentFile();
 		return parent == null ? new File(".") : parent;
 	}
+	public String getAbsoluteName() {
+		File file = new File(parentFolder(this), name);
+		return file.getAbsolutePath();
+	}
 }

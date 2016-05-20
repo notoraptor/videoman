@@ -1,12 +1,8 @@
 package videoman.gui;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
-import sun.awt.image.ImageWatched;
 
 import java.util.*;
 
@@ -45,6 +41,11 @@ public class EditableList<E> {
 			container.getChildren().add(node);
 			elements.put(removableLabel.getElement(), removableLabel);
 			simpleIntegerProperty.set(simpleIntegerProperty.get() + 1);
+		} else {
+			BasicLabel<E> basicLabel = elements.get(removableLabel.getElement());
+			if (basicLabel instanceof SharedLabel) {
+				((SharedLabel) basicLabel).setForAll();
+			}
 		}
 	}
 	public void remove(BasicLabel<E> removableLabel) {

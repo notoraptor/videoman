@@ -73,6 +73,8 @@ public class HomeController extends Controller<HomeForm> {
 	void addFolder(ActionEvent event) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle("Choisir un dossier contenant des vidéos ...");
+		if (lastDirectoryAdded != null)
+			directoryChooser.setInitialDirectory(lastDirectoryAdded);
 		File file = homeForm.gui().getDirectory(directoryChooser);
 		if (file != null) {
 			if (!file.exists() || !file.isDirectory())
@@ -86,6 +88,7 @@ public class HomeController extends Controller<HomeForm> {
 				if (!text.isEmpty())
 					text += Utils.endl;
 				text += file.getAbsolutePath() + Utils.endl;
+				lastDirectoryAdded = file;
 				list.setText(text);
 			}
 		}
@@ -165,6 +168,7 @@ public class HomeController extends Controller<HomeForm> {
 	private HomeForm homeForm;
 	private boolean created;
 	private Database database;
+	private File lastDirectoryAdded;
 	private int readList(File file) throws IOException {
 		list.clear();
 		int count = 0;

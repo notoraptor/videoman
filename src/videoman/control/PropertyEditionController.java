@@ -15,7 +15,6 @@ import videoman.core.database.Type;
 import videoman.form.PropertyEditionForm;
 import videoman.gui.*;
 
-import java.io.IOException;
 import java.util.*;
 
 public class PropertyEditionController extends Controller<PropertyEditionForm> implements DialogController {
@@ -126,7 +125,7 @@ public class PropertyEditionController extends Controller<PropertyEditionForm> i
 		okAction = action;
 	}
 	@Override
-	public void init(PropertyEditionForm propertyEditionForm) {
+	public void init(PropertyEditionForm propertyEditionForm) throws Exception {
 		form = propertyEditionForm;
 		freeProperties = new EditableList<>(freePropertiesContainer);
 		takenProperties = new EditableList<>(takenPropertiesContainer);
@@ -161,6 +160,10 @@ public class PropertyEditionController extends Controller<PropertyEditionForm> i
 				break;
 			default:
 				break;
+		}
+		if (allProperties == null) {
+			cancel(null);
+			return;
 		}
 		for (Property property: allProperties) if (!properties.contains(property) && !property.isQuery()) {
 			freeProperties.add(new AddableLabel<>(freeProperties, takenProperties, property));

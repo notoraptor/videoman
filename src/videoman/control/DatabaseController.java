@@ -90,6 +90,34 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		database.searchSameDuration();
 		resetPagination();
 	}
+	@FXML public void searchSameCategories(ActionEvent actionEvent) {
+		database.searchSameCategories();
+		resetPagination();
+	}
+	@FXML void deletePersons(ActionEvent event) throws Exception {
+		new FormDialog(new PropertyDeletionForm(form.gui(), Type.PERSON));
+		updatePersonTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void deleteCategories(ActionEvent event) throws Exception {
+		new FormDialog(new PropertyDeletionForm(form.gui(), Type.CATEGORY));
+		updateCategoryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
+	@FXML void deleteCountries(ActionEvent event) throws Exception {
+		new FormDialog(new PropertyDeletionForm(form.gui(), Type.COUNTRY));
+		updateCountryTable();
+		tableVideos.refresh();
+		synchronized (selected) {
+			setLabelsFrom(selected);
+		}
+	}
 	@FXML void openVideo(ActionEvent event) {
 		if(Desktop.isDesktopSupported()) {
 			Object userData = labelName.getUserData();
@@ -180,8 +208,8 @@ public class DatabaseController extends Controller<DatabaseForm> {
 					try {
 						database.deletePermanently(toDelete);
 						update();
-						new Alert(null, "Fichier ssupprimés", "Fichiers supprimés.");
-						// TODO
+						//String message = toDelete.size() + (toDelete.size() < 2 ? " fichier supprimé" : " fichiers supprimés");
+						//new Alert(null, message, message + '.');
 					} catch (FileException e) {
 						update();
 						new Alert(null, "Erreur pendant la suppression de vidéos", e.getMessage());
@@ -353,6 +381,9 @@ public class DatabaseController extends Controller<DatabaseForm> {
 	final private HashSet<Video> selected = new HashSet<>();
 	private Video selectedVideo = null;
 
+	private <T> HashSet<T> set(Collection<T> collection) {
+		return new HashSet<>(collection);
+	}
 	private void chooseDeletion(Type type, ActionEvent event) {
 		switch (type) {
 			case PERSON:
@@ -406,6 +437,27 @@ public class DatabaseController extends Controller<DatabaseForm> {
 			default:break;
 		}
 	}
+	private void chooseEdition(Type to) {
+		try {
+			switch (to) {
+				case PERSON:
+					editPersons(null);
+					break;
+				case CATEGORY:
+					editCategories(null);
+					break;
+				case COUNTRY:
+					editCountries(null);
+					break;
+				case FOLDER:
+					break;
+				case QUERY:
+					break;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	private class DatabaseInformer implements Informer {
 		@Override
 		public void inform(Info info) {
@@ -446,10 +498,22 @@ public class DatabaseController extends Controller<DatabaseForm> {
 					new MenuItem("Transformer en " + Type.getPropertyName(typeTo1));
 			final MenuItem menuTo2 =
 					new MenuItem("Transformer en " + Type.getPropertyName(typeTo2));
+			final MenuItem menuEdit1 = new MenuItem("Modifier les " + Type.getPropertyPluralName(typeTo1) + " de ces vidéos");
+			final MenuItem menuEdit2 = new MenuItem("Modifier les " + Type.getPropertyPluralName(typeTo2) + " de ces vidéos");
 			menuDelete.setOnAction(event -> chooseDeletion(typeFrom, event));
 			menuTo1.setOnAction(event -> chooseTransformation(typeFrom, typeTo1, event));
 			menuTo2.setOnAction(event -> chooseTransformation(typeFrom, typeTo2, event));
-			contextMenu.getItems().addAll(menuDelete, menuTo1, menuTo2);
+			menuEdit1.setOnAction(event -> {
+				// TODO IMPARFAIT: s'il y a moins de vidéos dans la table que dans la propriété, alors elles ne seront pas toutes sélectionnées.
+				tableVideos.getSelectionModel().selectAll();
+				chooseEdition(typeTo1);
+			});
+			menuEdit2.setOnAction(event -> {
+				// TODO IMPARFAIT: s'il y a moins de vidéos dans la table que dans la propriété, alors elles ne seront pas toutes sélectionnées.
+				tableVideos.getSelectionModel().selectAll();
+				chooseEdition(typeTo2);
+			});
+			contextMenu.getItems().addAll(menuDelete, menuTo1, menuTo2, menuEdit1, menuEdit2);
 			tableRow.setOnContextMenuRequested(event -> {
 				tableRow.setContextMenu(tableRow.isEmpty() ? null : (tableRow.getItem().isQuery() ? null : contextMenu));
 			});
@@ -868,10 +932,68 @@ public class DatabaseController extends Controller<DatabaseForm> {
 		tableCategories.setRowFactory(new PropertyTableRowFactory(Type.CATEGORY));
 		tableCountries.setRowFactory(new PropertyTableRowFactory(Type.COUNTRY));
 		tableVideos.setOnKeyReleased(event -> {
-			if (event.getCode().equals(KeyCode.ENTER)) {
-				openVideo(null);
-			} else if (event.getCode().equals(KeyCode.DELETE)) {
-				requestVideoDeletion(null);
+			if (event.isControlDown()) {
+				if (event.getCode().equals(KeyCode.ENTER)) {
+					openVideo(null);
+				} else if (event.getCode().equals(KeyCode.DELETE)) {
+					requestVideoDeletion(null);
+				}
+			}
+		});
+		tablePersons.focusedProperty().addListener((observable, oldValue, newValue) -> tablePersons.setUserData(newValue ? "" : null));
+		tableCategories.focusedProperty().addListener((observable, oldValue, newValue) -> tableCategories.setUserData(newValue ? "" : null));
+		tableCountries.focusedProperty().addListener((observable, oldValue, newValue) -> tableCountries.setUserData(newValue ? "" : null));
+		tablePersons.setOnKeyTyped(event -> {
+			Object o = tablePersons.getUserData();
+			if (o != null) {
+				String toSearch = (o + event.getCharacter()).toLowerCase();
+				tablePersons.setUserData(toSearch);
+				Property found = null;
+				for (Property property : tablePersons.getItems()) if (property.getValue().startsWith(toSearch)) {
+					found = property;
+					break;
+				}
+				if (found != null) {
+					tablePersons.getSelectionModel().clearSelection();
+					tablePersons.scrollTo(found);
+					tablePersons.getSelectionModel().select(found);
+				}
+			}
+		});
+		//
+		tableCategories.setOnKeyTyped(event -> {
+			Object o = tableCategories.getUserData();
+			if (o != null) {
+				String toSearch = (o + event.getCharacter()).toLowerCase();
+				tableCategories.setUserData(toSearch);
+				Property found = null;
+				for (Property property : tableCategories.getItems()) if (property.getValue().startsWith(toSearch)) {
+					found = property;
+					break;
+				}
+				if (found != null) {
+					tableCategories.getSelectionModel().clearSelection();
+					tableCategories.scrollTo(found);
+					tableCategories.getSelectionModel().select(found);
+				}
+			}
+		});
+		//
+		tableCountries.setOnKeyTyped(event -> {
+			Object o = tableCountries.getUserData();
+			if (o != null) {
+				String toSearch = (o + event.getCharacter()).toLowerCase();
+				tableCountries.setUserData(toSearch);
+				Property found = null;
+				for (Property property : tableCountries.getItems()) if (property.getValue().startsWith(toSearch)) {
+					found = property;
+					break;
+				}
+				if (found != null) {
+					tableCountries.getSelectionModel().clearSelection();
+					tableCountries.scrollTo(found);
+					tableCountries.getSelectionModel().select(found);
+				}
 			}
 		});
 	}

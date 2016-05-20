@@ -7,6 +7,8 @@
 # tif
 # tiff
 ## vidéos
+## (on rajoute ISO pour détecter les images DVD, mais ça peut poser des problèmes lorsqu'on rencontre des images disques qui ne sont pas des DVDs).
+#iso
 3g2
 3gp
 asf

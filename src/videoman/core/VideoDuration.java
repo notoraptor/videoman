@@ -13,6 +13,9 @@ public class VideoDuration implements Comparable<VideoDuration> {
 		long remainingMinutes = values[Const.MINUTES] % 60;
 		values[Const.HOURS] = values[Const.MINUTES] / 60;
 		values[Const.MINUTES] = remainingMinutes;
+		long remainingHours = values[Const.HOURS] % 24;
+		values[Const.DAYS] = values[Const.HOURS] / 24;
+		values[Const.HOURS] = remainingHours;
 	}
 	private String string(long value) {
 		return value > 9 ? String.valueOf(value) : '0' + String.valueOf(value);
@@ -21,7 +24,7 @@ public class VideoDuration implements Comparable<VideoDuration> {
 		return duration;
 	}
 	public long toLong() {
-		return values[Const.SECONDS] + (values[Const.MINUTES] * 60L) + (values[Const.HOURS] * 3600L);
+		return values[Const.SECONDS] + (values[Const.MINUTES] * 60L) + (values[Const.HOURS] * 3600L) + (values[Const.DAYS]*24L*3600L);
 	}
 	@Override
 	public String toString() {
@@ -36,7 +39,6 @@ public class VideoDuration implements Comparable<VideoDuration> {
 		if (s.length() == 0)
 			s.append(0).append(Const.durationNames[Const.durationNames.length - 1]);
 		return s.toString();
-		//return hours + "h " + minutes + "min " + seconds + "sec";
 	}
 	@Override
 	public int compareTo(VideoDuration other) {

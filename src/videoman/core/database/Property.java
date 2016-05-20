@@ -10,6 +10,7 @@ abstract public class Property implements Comparable<Property> {
 	private String name;
 	private HashSet<Video> content;
 	private int hashCode;
+	private boolean selected;
 	Property(Type theType, String theName) {
 		assert theType != null && theName != null;
 		type = theType;
@@ -45,6 +46,22 @@ abstract public class Property implements Comparable<Property> {
 	}
 	public String getValue() {
 		return name;
+	}
+	public int getValueLength() {
+		return name.length();
+	}
+	public boolean isSelected() {
+		return selected;
+	}
+	public void setSelected(boolean b) {
+		selected = b;
+		System.err.println(name + " selected ? " + selected);
+	}
+	public void select() {
+		selected = true;
+	}
+	public void deselect() {
+		selected = false;
 	}
 	public int getSize() {
 		return content.size();

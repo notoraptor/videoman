@@ -7,8 +7,6 @@ import videoman.core.database.Database;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.DoubleSummaryStatistics;
 
 public class VideoFile extends Video {
 	//@modifiable
@@ -125,8 +123,7 @@ public class VideoFile extends Video {
 		}
 	}
 	private void generateCategories() {
-		String pattern = "(?U)[^\\p{Alpha}0-9']+";
-		for (String category : filename.getAbsolutePath().split(pattern))
+		for (String category : Utils.explode(filename.getAbsoluteName()))
 			if (!category.isEmpty()) {
 				database.addCategory(this, category);
 			}

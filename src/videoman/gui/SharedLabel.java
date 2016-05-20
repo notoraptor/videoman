@@ -15,6 +15,8 @@ public class SharedLabel<E> extends BasicLabel<E> {
 	private int sharedSize;
 	private int totalSize;
 	private boolean forAll;
+	private ToggleGroup toggleGroup;
+	private ToggleButton toggleButtonAll;
 	public SharedLabel(EditableList<E> parent, E element, int sharedCount, int totalCount) {
 		super(parent, element, "supprimer");
 		sharedSize = sharedCount;
@@ -26,8 +28,8 @@ public class SharedLabel<E> extends BasicLabel<E> {
 		BorderPane content = new BorderPane();
 		content.setCenter(label);
 		ToggleButton toggleButtonSel = new ToggleButton("Pour " + sharedSize + "/" + totalSize);
-		ToggleButton toggleButtonAll = new ToggleButton("Pour tout (" + totalSize + ")");
-		ToggleGroup toggleGroup = new ToggleGroup();
+		toggleButtonAll = new ToggleButton("Pour tout (" + totalSize + ")");
+		toggleGroup = new ToggleGroup();
 		toggleButtonSel.setToggleGroup(toggleGroup);
 		toggleButtonAll.setToggleGroup(toggleGroup);
 		toggleButtonSel.setUserData(false);
@@ -66,5 +68,8 @@ public class SharedLabel<E> extends BasicLabel<E> {
 	}
 	public boolean isForAll() {
 		return forAll;
+	}
+	public void setForAll() {
+		toggleButtonAll.setSelected(true);
 	}
 }

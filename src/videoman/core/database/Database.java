@@ -240,6 +240,11 @@ public class Database {
 		for (Video video: database) total += video.getSize();
 		return total;
 	}
+	public double getVideosTotalDuration() {
+		double total = 0;
+		for (Video video: database) total += video.getDuration().toDouble();
+		return total;
+	}
 	public int size() {
 		return database.size();
 	}
@@ -274,7 +279,12 @@ public class Database {
 		MessageInfo.inform("Génération de la base de données.");
 		int saved = 0;
 		for (Video video : database) {
-			saved += video.save();
+			try {
+				saved += video.save();
+			} catch (VideoException ve) {
+				ve.printStackTrace();
+				video.deleteEntry();
+			}
 			if (saved != 0 && saved % 5 == 0) {
 				Notification.info(new ProgressInfo(saved, database.size()));
 			}
@@ -301,6 +311,7 @@ public class Database {
 		for (File file : files) try {
 			addVideo(new VideoFile(this, new FileDesc(file)), files.size());
 		} catch (Exception e) {
+			System.err.println("Exception with file: " + file.getAbsolutePath());
 			System.err.println("Exception: " + e);
 			e.printStackTrace();
 			addBadFile(file);
@@ -314,7 +325,8 @@ public class Database {
 	}
 	@Override
 	public String toString() {
-		return Utils.orthograph(database.size(), "vidéo") + " (" + new VideoSize(getVideosTotalSize())  + ").";
+		return Utils.orthograph(database.size(), "vidéo") +
+				" (" + new VideoDuration(getVideosTotalDuration()) + ") (" + new VideoSize(getVideosTotalSize())  + ").";
 	}
 	public String asString() {
 		return toString();
@@ -329,14 +341,12 @@ public class Database {
 	}
 	public void deletePermanently(LinkedList<Video> toDelete) throws FileException {
 		for(Video video: toDelete) {
+			video.deletePermanently();
 			video.removeFromProperties();
 		}
 		database.removeAll(toDelete);
 		refreshProperties();
 		updateView();
-		for(Video video: toDelete) {
-			video.deletePermanently();
-		}
 	}
 	public void update(List<Video> videos, Set<Property> toRemove, Set<Property> toAdd) {
 		HashSet<Property> propertiesToAdd = new HashSet<>();
@@ -462,6 +472,32 @@ public class Database {
 			query.add(video);
 		databaseView.show(query);
 	}
+	public void searchSameCategories() {
+		TreeMap<String, TreeSet<Video>> cluster = new TreeMap<>();
+		for (Video video: database) {
+			TreeSet<Video> list;
+			String categories = video.getCategories().toString();
+			if (cluster.containsKey(categories))
+				list = cluster.get(categories);
+			else {
+				list = new TreeSet<>((v1, v2) -> v1.getName().compareTo(v2.getName()));
+				cluster.put(categories, list);
+			}
+			list.add(video);
+		}
+		Iterator<String> videoCategoriesIterator = cluster.keySet().iterator();
+		while (videoCategoriesIterator.hasNext()) if (cluster.get(videoCategoriesIterator.next()).size() < 2)
+			videoCategoriesIterator.remove();
+		Query query = new Query("vidéos aux catégories identiques");
+		for (TreeSet<Video> list: cluster.values()) for (Video video: list)
+			query.add(video);
+		databaseView.show(query);
+	}
+	public void remove(Property property) {
+		property.clear();
+		refreshProperties();
+		updateView();
+	}
 	public class View {
 		private ArrayList<Video> view;
 		private Property showed;
@@ -515,8 +551,7 @@ public class Database {
 			if (from < 0) from = 0;
 			if (to < from) to = from;
 			if (to >= size) to = size - 1;
-			List<Video> list = view.subList(from, to + 1);
-			return list;
+			return view.subList(from, to + 1);
 		}
 		public void sort(Collection<Sort> sortOrder) {
 			//System.err.println("==== " + Math.abs(new Random().nextLong()) + " ====");
